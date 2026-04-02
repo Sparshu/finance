@@ -2,7 +2,8 @@ package com.finio.app.config;
 
 import com.finio.app.repository.UserRepository;
 import com.finio.app.security.JwtAuthFilter;
-import lombok.RequiredArgsConstructor;
+import com.finio.app.security.JwtService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,14 +29,25 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
+
+    // ✅ FIX: Define JwtAuthFilter as a Bean (NO constructor injection)
+    @Bean
+    public JwtAuthFilter jwtAuthFilter() {
+        return new JwtAuthFilter(jwtService, userDetailsService());
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,12 +55,13 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()   // public: login, register
-                .anyRequest().authenticated()                   // everything else needs JWT
+                .requestMatchers("/api/auth/**").permitAll()
+                .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            // ✅ FIX: use bean method instead of injected field
+            .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
