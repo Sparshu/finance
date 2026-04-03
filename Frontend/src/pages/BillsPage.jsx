@@ -1,46 +1,138 @@
-import { BILLS, fmt } from '../data/sampleData'
+import { useState } from 'react'
+import { useApi } from '../api/useApi'
+import { billApi } from '../api/services'
+import { fmt } from '../data/sampleData'
 import styles from './BillsPage.module.css'
 
+const BILL_ICONS = ['📺','🌐','💳','🛡️','🎵','💡','📱','🏠','🚗','☎️']
+
 export default function BillsPage() {
-  const totalDue = BILLS.reduce((s, b) => s + b.amount, 0)
+  const { data: bills, loading, refetch } = useApi(billApi.getAll)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: '', icon: '📺', amount: '', dueDay: '1' })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const upcoming = (bills || []).filter(b => b.status !== 'PAID')
+  const paid     = (bills || []).filter(b => b.status === 'PAID')
+  const totalDue = upcoming.reduce((s, b) => s + Number(b.amount), 0)
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) return setError('Name is required')
+    if (!form.amount || Number(form.amount) <= 0) return setError('Enter a valid amount')
+    setSaving(true); setError('')
+    try {
+      await billApi.create({
+        name:   form.name,
+        icon:   form.icon,
+        amount: Number(form.amount),
+        dueDay: Number(form.dueDay),
+        status: 'UPCOMING',
+      })
+      setForm({ name: '', icon: '📺', amount: '', dueDay: '1' })
+      setShowForm(false)
+      refetch()
+    } catch (e) { setError(e.message) } finally { setSaving(false) }
+  }
+
+  const handlePay = async (id) => {
+    try { await billApi.markPaid(id); refetch() } catch (e) { alert(e.message) }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this bill?')) return
+    try { await billApi.delete(id); refetch() } catch (e) { alert(e.message) }
+  }
+
+  const statusBadge = (s) => {
+    if (s === 'PAID')     return <span className="badge badge-green">Paid</span>
+    if (s === 'DUE')      return <span className="badge badge-red">Due Now</span>
+    return <span className="badge">Upcoming</span>
+  }
 
   return (
     <div className="page-anim">
       <div className="grid-3 mb12">
-        {[
-          { label: 'Total Due This Month', val: fmt(totalDue),                                    color: 'var(--amber)', borderColor: 'var(--amber)' },
-          { label: 'Upcoming Bills',       val: BILLS.filter(b => b.status === 'upcoming').length, color: 'var(--text)',  borderColor: 'transparent' },
-          { label: 'Due Soon',             val: BILLS.filter(b => b.status === 'due').length,      color: 'var(--red)',   borderColor: 'transparent' },
-        ].map((c, i) => (
-          <div className="card" key={i} style={{ borderTop: `2px solid ${c.borderColor}` }}>
-            <div className="card-label">{c.label}</div>
-            <div className="card-value" style={{ color: c.color, fontSize: 24 }}>{c.val}</div>
-          </div>
-        ))}
+        <div className="card" style={{ borderTop: '2px solid var(--red)' }}>
+          <div className="card-label">Total Due</div>
+          <div className="card-value" style={{ color: 'var(--red)', fontSize: 22 }}>{fmt(totalDue)}</div>
+        </div>
+        <div className="card" style={{ borderTop: '2px solid var(--amber)' }}>
+          <div className="card-label">Upcoming Bills</div>
+          <div className="card-value" style={{ color: 'var(--amber)', fontSize: 22 }}>{upcoming.length}</div>
+        </div>
+        <div className="card" style={{ borderTop: '2px solid var(--green)' }}>
+          <div className="card-label">Paid This Month</div>
+          <div className="card-value" style={{ color: 'var(--green)', fontSize: 22 }}>{paid.length}</div>
+        </div>
       </div>
 
-      <div className="mt16">
-        {BILLS.map((b, i) => (
-          <div
-            className={styles.billRow}
-            key={i}
-            style={{
-              animationDelay: i * 0.06 + 's',
-              borderLeft: `3px solid ${b.status === 'due' ? 'var(--red)' : 'var(--border2)'}`,
-            }}
-          >
-            <span className={styles.billIcon}>{b.icon}</span>
-            <div>
-              <div className={styles.billName}>{b.name}</div>
-              <div className={styles.billDue}>Due {b.due}</div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button className="btn-primary" onClick={() => setShowForm(s => !s)} style={{ padding: '8px 18px', fontSize: 13 }}>
+          {showForm ? '✕ Cancel' : '+ Add Bill'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="section-title" style={{ marginBottom: 16 }}>New Bill / Subscription</div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Name</label>
+              <input className="form-input" placeholder="Netflix" value={form.name}
+                onChange={e => setForm(s => ({ ...s, name: e.target.value }))} />
             </div>
-            <span
-              className={`badge ${b.status === 'due' ? 'badge-red' : 'badge-amber'}`}
-              style={{ marginLeft: 'auto', marginRight: 16 }}
-            >
-              {b.status === 'due' ? 'Due Soon' : 'Upcoming'}
-            </span>
-            <div className={styles.billAmount}>{fmt(b.amount)}</div>
+            <div className="form-group">
+              <label className="form-label">Icon</label>
+              <select className="form-input" value={form.icon}
+                onChange={e => setForm(s => ({ ...s, icon: e.target.value }))}>
+                {BILL_ICONS.map(ic => <option key={ic}>{ic}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Amount (₹)</label>
+              <input className="form-input" type="number" placeholder="649" value={form.amount}
+                onChange={e => setForm(s => ({ ...s, amount: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Due Day of Month</label>
+              <input className="form-input" type="number" min="1" max="31" placeholder="8" value={form.dueDay}
+                onChange={e => setForm(s => ({ ...s, dueDay: e.target.value }))} />
+            </div>
+          </div>
+          {error && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
+          <button className="btn-primary" onClick={handleCreate} disabled={saving} style={{ padding: '8px 20px', fontSize: 13 }}>
+            {saving ? 'Saving…' : 'Add Bill'}
+          </button>
+        </div>
+      )}
+
+      <div className="card">
+        {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Loading bills…</div>}
+        {!loading && (!bills || bills.length === 0) && (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>No bills yet — add one above</div>
+        )}
+        {!loading && (bills || []).map((b, i) => (
+          <div className={styles.billRow} key={b.id} style={{ animationDelay: i * 0.05 + 's' }}>
+            <div className={styles.billIcon}>{b.icon || '📄'}</div>
+            <div className={styles.billInfo}>
+              <div className={styles.billName}>{b.name}</div>
+              <div className={styles.billMeta}>Due on day {b.dueDay} · {statusBadge(b.status)}</div>
+            </div>
+            <div className={styles.billRight}>
+              <div className={styles.billAmount}>{fmt(b.amount)}</div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                {b.status !== 'PAID' && (
+                  <button onClick={() => handlePay(b.id)}
+                    className="btn-primary"
+                    style={{ padding: '4px 10px', fontSize: 11 }}>✓ Paid</button>
+                )}
+                <button onClick={() => handleDelete(b.id)}
+                  style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: 11, color: 'var(--text2)', cursor: 'pointer' }}>✕</button>
+              </div>
+            </div>
           </div>
         ))}
       </div>

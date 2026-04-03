@@ -12,14 +12,20 @@ import ReportsPage     from './pages/ReportsPage'
 import { PAGE_TITLES, now } from './data/sampleData'
 
 export default function App() {
-  const [authed, setAuthed] = useState(false)
+  const [authed, setAuthed] = useState(() => !!localStorage.getItem('finio_token'))
   const [user,   setUser]   = useState({ name: '', email: '' })
   const [page,   setPage]   = useState('dashboard')
   const [modal,  setModal]  = useState(false)
 
   const login = (name, email) => {
-    setUser({ name: name || 'Rahul Sharma', email: email || 'rahul@example.com' })
+    setUser({ name, email })
     setAuthed(true)
+  }
+
+  const logout = () => {
+    localStorage.removeItem('finio_token')
+    setAuthed(false)
+    setUser({ name: '', email: '' })
   }
 
   if (!authed) return <AuthScreen onLogin={login} />
@@ -40,7 +46,7 @@ export default function App() {
         active={page}
         setActive={setPage}
         user={user}
-        onLogout={() => setAuthed(false)}
+        onLogout={logout}
       />
 
       <main className="main-content">
