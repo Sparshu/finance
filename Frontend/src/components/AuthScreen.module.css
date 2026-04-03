@@ -1,0 +1,163 @@
+.authWrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+}
+
+.authHero {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.authHero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(0,230,118,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(64,196,255,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: .4;
+  pointer-events: none;
+}
+
+.heroBrand {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+.heroBrand span { color: var(--green); }
+
+.heroContent { position: relative; z-index: 1; }
+
+.heroTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-bg);
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--green);
+  letter-spacing: .5px;
+  margin-bottom: 24px;
+}
+.heroTag::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.heroHeadline {
+  font-family: var(--display);
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 20px;
+}
+.heroHeadline em { font-style: normal; color: var(--green); }
+
+.heroSub {
+  color: var(--text2);
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 440px;
+  margin-bottom: 40px;
+}
+
+.heroChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+  margin-bottom: 40px;
+  animation: fadeUp .8s ease both .3s;
+}
+.heroBar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  animation: bar-grow .6s cubic-bezier(.16,1,.3,1) both;
+}
+
+.heroStats { display: flex; gap: 32px; }
+.heroStatVal {
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--green);
+  letter-spacing: -1px;
+}
+.heroStatLabel { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+.heroFooter { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+/* ── Auth panel ── */
+.authPanel {
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 48px;
+  animation: fadeUp .5s ease both .1s;
+}
+
+.authTitle {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+}
+.authSubtitle { color: var(--text2); margin-bottom: 36px; font-size: 14px; }
+
+.forgotLink { font-size: 12px; color: var(--text2); cursor: pointer; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--text3);
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.authSwitch {
+  text-align: center;
+  color: var(--text2);
+  font-size: 13px;
+}
+.authSwitch a {
+  color: var(--green);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+}
