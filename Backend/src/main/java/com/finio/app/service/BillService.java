@@ -6,25 +6,23 @@ import com.finio.app.entity.Bill;
 import com.finio.app.entity.Bill.BillStatus;
 import com.finio.app.entity.User;
 import com.finio.app.repository.BillRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class BillService {
 
     private final BillRepository billRepository;
 
+    public BillService(BillRepository billRepository) {
+        this.billRepository = billRepository;
+    }
+
     public BillResponse create(BillRequest req, User user) {
         Bill bill = Bill.builder()
-                .user(user)
-                .name(req.getName())
-                .icon(req.getIcon())
-                .amount(req.getAmount())
-                .dueDay(req.getDueDay())
-                .status(req.getStatus() != null ? req.getStatus() : BillStatus.UPCOMING)
+                .user(user).name(req.name()).icon(req.icon()).amount(req.amount())
+                .dueDay(req.dueDay()).status(req.status() != null ? req.status() : BillStatus.UPCOMING)
                 .build();
         return BillResponse.from(billRepository.save(bill));
     }
@@ -42,22 +40,17 @@ public class BillService {
     public BillResponse update(Long id, BillRequest req, User user) {
         Bill bill = billRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
-        if (!bill.getUser().getId().equals(user.getId()))
-            throw new RuntimeException("Unauthorized");
-
-        bill.setName(req.getName());
-        bill.setIcon(req.getIcon());
-        bill.setAmount(req.getAmount());
-        bill.setDueDay(req.getDueDay());
-        if (req.getStatus() != null) bill.setStatus(req.getStatus());
+        if (!bill.getUser().getId().equals(user.getId())) throw new RuntimeException("Unauthorized");
+        bill.setName(req.name()); bill.setIcon(req.icon());
+        bill.setAmount(req.amount()); bill.setDueDay(req.dueDay());
+        if (req.status() != null) bill.setStatus(req.status());
         return BillResponse.from(billRepository.save(bill));
     }
 
     public BillResponse markAsPaid(Long id, User user) {
         Bill bill = billRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
-        if (!bill.getUser().getId().equals(user.getId()))
-            throw new RuntimeException("Unauthorized");
+        if (!bill.getUser().getId().equals(user.getId())) throw new RuntimeException("Unauthorized");
         bill.setStatus(BillStatus.PAID);
         return BillResponse.from(billRepository.save(bill));
     }
@@ -65,8 +58,7 @@ public class BillService {
     public void delete(Long id, User user) {
         Bill bill = billRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
-        if (!bill.getUser().getId().equals(user.getId()))
-            throw new RuntimeException("Unauthorized");
+        if (!bill.getUser().getId().equals(user.getId())) throw new RuntimeException("Unauthorized");
         billRepository.delete(bill);
     }
 }

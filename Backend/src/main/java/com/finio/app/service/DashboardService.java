@@ -9,14 +9,12 @@ import com.finio.app.repository.BillRepository;
 import com.finio.app.repository.InvestmentRepository;
 import com.finio.app.repository.SavingsGoalRepository;
 import com.finio.app.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class DashboardService {
 
     private final TransactionRepository transactionRepository;
@@ -24,14 +22,22 @@ public class DashboardService {
     private final SavingsGoalRepository goalRepository;
     private final BillRepository        billRepository;
 
+    public DashboardService(TransactionRepository transactionRepository,
+                            InvestmentRepository investmentRepository,
+                            SavingsGoalRepository goalRepository,
+                            BillRepository billRepository) {
+        this.transactionRepository = transactionRepository;
+        this.investmentRepository  = investmentRepository;
+        this.goalRepository        = goalRepository;
+        this.billRepository        = billRepository;
+    }
+
     public DashboardResponse getSummary(User user) {
         Long userId = user.getId();
-
         BigDecimal totalIncome  = transactionRepository.sumAmountByUserIdAndType(userId, TransactionType.INCOME);
         BigDecimal totalExpense = transactionRepository.sumAmountByUserIdAndType(userId, TransactionType.EXPENSE);
         BigDecimal netBalance   = totalIncome.subtract(totalExpense);
 
-        // Sum current value of all investments
         List<Investment> investments = investmentRepository.findByUserIdOrderByCreatedAtDesc(userId);
         BigDecimal investmentValue = investments.stream()
                 .map(inv -> {
@@ -40,19 +46,14 @@ public class DashboardService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        long txCount      = transactionRepository.findByUserIdOrderByDateDesc(userId).size();
-        long activeGoals  = goalRepository.findByUserIdOrderByCreatedAtDesc(userId).size();
+        long txCount       = transactionRepository.findByUserIdOrderByDateDesc(userId).size();
+        long activeGoals   = goalRepository.findByUserIdOrderByCreatedAtDesc(userId).size();
         long upcomingBills = billRepository.findByUserIdAndStatus(userId, BillStatus.UPCOMING).size()
                            + billRepository.findByUserIdAndStatus(userId, BillStatus.DUE).size();
 
         return DashboardResponse.builder()
-                .totalIncome(totalIncome)
-                .totalExpense(totalExpense)
-                .netBalance(netBalance)
-                .totalInvestmentValue(investmentValue)
-                .transactionCount(txCount)
-                .activeGoals(activeGoals)
-                .upcomingBills(upcomingBills)
-                .build();
+                .totalIncome(totalIncome).totalExpense(totalExpense).netBalance(netBalance)
+                .totalInvestmentValue(investmentValue).transactionCount(txCount)
+                .activeGoals(activeGoals).upcomingBills(upcomingBills).build();
     }
 }

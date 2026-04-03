@@ -1,19 +1,24 @@
 package com.finio.app.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
-public class DashboardResponse {
-    private BigDecimal totalIncome;
-    private BigDecimal totalExpense;
-    private BigDecimal netBalance;
-    private BigDecimal totalInvestmentValue;
-    private long       transactionCount;
-    private long       activeGoals;
-    private long       upcomingBills;
+public record DashboardResponse(BigDecimal totalIncome, BigDecimal totalExpense,
+                                BigDecimal netBalance, BigDecimal totalInvestmentValue,
+                                long transactionCount, long activeGoals, long upcomingBills) {
+    public static Builder builder() { return new Builder(); }
+    public static class Builder {
+        private BigDecimal totalIncome, totalExpense, netBalance, totalInvestmentValue;
+        private long transactionCount, activeGoals, upcomingBills;
+        public Builder totalIncome(BigDecimal v)          { totalIncome = v; return this; }
+        public Builder totalExpense(BigDecimal v)         { totalExpense = v; return this; }
+        public Builder netBalance(BigDecimal v)           { netBalance = v; return this; }
+        public Builder totalInvestmentValue(BigDecimal v) { totalInvestmentValue = v; return this; }
+        public Builder transactionCount(long v)           { transactionCount = v; return this; }
+        public Builder activeGoals(long v)                { activeGoals = v; return this; }
+        public Builder upcomingBills(long v)              { upcomingBills = v; return this; }
+        public DashboardResponse build() {
+            return new DashboardResponse(totalIncome, totalExpense, netBalance,
+                    totalInvestmentValue, transactionCount, activeGoals, upcomingBills);
+        }
+    }
 }

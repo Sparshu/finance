@@ -1,14 +1,12 @@
 package com.finio.app.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "budgets")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Budget {
 
     @Id
@@ -26,7 +24,7 @@ public class Budget {
     private BigDecimal limit;
 
     @Column(nullable = false)
-    private Integer month;   // 1–12
+    private Integer month;
 
     @Column(nullable = false)
     private Integer year;
@@ -34,6 +32,44 @@ public class Budget {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    public Budget() {}
+
+    public Budget(Long id, User user, String category, BigDecimal limit,
+                  Integer month, Integer year, LocalDateTime createdAt) {
+        this.id = id; this.user = user; this.category = category;
+        this.limit = limit; this.month = month; this.year = year;
+        this.createdAt = createdAt;
+    }
+
     @PrePersist
     protected void onCreate() { this.createdAt = LocalDateTime.now(); }
+
+    public Long getId()                       { return id; }
+    public void setId(Long id)                { this.id = id; }
+    public User getUser()                     { return user; }
+    public void setUser(User user)            { this.user = user; }
+    public String getCategory()               { return category; }
+    public void setCategory(String category)  { this.category = category; }
+    public BigDecimal getLimit()              { return limit; }
+    public void setLimit(BigDecimal limit)    { this.limit = limit; }
+    public Integer getMonth()                 { return month; }
+    public void setMonth(Integer month)       { this.month = month; }
+    public Integer getYear()                  { return year; }
+    public void setYear(Integer year)         { this.year = year; }
+    public LocalDateTime getCreatedAt()       { return createdAt; }
+    public void setCreatedAt(LocalDateTime t) { this.createdAt = t; }
+
+    public static Builder builder() { return new Builder(); }
+    public static class Builder {
+        private Long id; private User user; private String category;
+        private BigDecimal limit; private Integer month, year; private LocalDateTime createdAt;
+        public Builder id(Long id)                { this.id = id; return this; }
+        public Builder user(User user)            { this.user = user; return this; }
+        public Builder category(String category)  { this.category = category; return this; }
+        public Builder limit(BigDecimal limit)    { this.limit = limit; return this; }
+        public Builder month(Integer month)       { this.month = month; return this; }
+        public Builder year(Integer year)         { this.year = year; return this; }
+        public Builder createdAt(LocalDateTime t) { this.createdAt = t; return this; }
+        public Budget build() { return new Budget(id, user, category, limit, month, year, createdAt); }
+    }
 }

@@ -1,0 +1,25 @@
+.investRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.investRow:last-child { border-bottom: none; }
+
+.ticker {
+  width: 44px; height: 44px;
+  background: var(--bg3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.investName   { font-size: 13.5px; font-weight: 500; }
+.investQty    { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+.investPrice  { font-family: var(--mono); font-size: 14px; }
+.investChange { font-family: var(--mono); font-size: 12px; }

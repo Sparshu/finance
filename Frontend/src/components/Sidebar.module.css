@@ -1,0 +1,102 @@
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  padding: 28px 24px 20px;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.brand span { color: var(--green); }
+
+.sectionLabel {
+  padding: 20px 24px 8px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  margin: 2px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: background .15s, color .15s;
+  border: 1px solid transparent;
+}
+.navItem:hover { background: var(--bg3); color: var(--text); }
+.active {
+  background: var(--green-bg) !important;
+  border-color: rgba(0,230,118,0.15) !important;
+  color: var(--green) !important;
+  font-weight: 500;
+}
+
+.navIcon {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 16px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.userPill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.userPill:hover { background: var(--bg3); }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 13px;
+  color: #0d0f0e;
+  flex-shrink: 0;
+}
+
+.userName  { font-size: 13px; font-weight: 500; }
+.userEmail { font-size: 11px; color: var(--text2); }
+
+.logoutBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color .15s;
+}
+.logoutBtn:hover { color: var(--red); }
