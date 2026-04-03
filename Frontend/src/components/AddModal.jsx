@@ -1,12 +1,40 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../data/sampleData'
+import { txApi } from '../api/services'
 import styles from './AddModal.module.css'
 
-export default function AddModal({ onClose }) {
-  const [type,   setType]   = useState('expense')
-  const [name,   setName]   = useState('')
-  const [amount, setAmount] = useState('')
-  const [cat,    setCat]    = useState('Food')
+export default function AddModal({ onClose, onSaved }) {
+  const [type,    setType]    = useState('EXPENSE')
+  const [name,    setName]    = useState('')
+  const [amount,  setAmount]  = useState('')
+  const [cat,     setCat]     = useState('Food')
+  const [date,    setDate]    = useState(new Date().toISOString().split('T')[0])
+  const [note,    setNote]    = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
+
+  const handleSave = async () => {
+    if (!name.trim())  return setError('Description is required')
+    if (!amount || isNaN(amount) || Number(amount) <= 0) return setError('Enter a valid amount')
+    setError('')
+    setLoading(true)
+    try {
+      await txApi.create({
+        name:     name.trim(),
+        amount:   Number(amount),
+        type,
+        category: cat,
+        date,
+        note:     note.trim() || null,
+      })
+      onSaved?.()
+      onClose()
+    } catch (e) {
+      setError(e.message || 'Failed to save')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -17,14 +45,14 @@ export default function AddModal({ onClose }) {
 
         <div className={styles.typeToggle}>
           <button
-            className={`${styles.typeBtn} ${type === 'income' ? styles.activeIncome : ''}`}
-            onClick={() => setType('income')}
+            className={`${styles.typeBtn} ${type === 'INCOME' ? styles.activeIncome : ''}`}
+            onClick={() => setType('INCOME')}
           >
             ▲ Income
           </button>
           <button
-            className={`${styles.typeBtn} ${type === 'expense' ? styles.activeExpense : ''}`}
-            onClick={() => setType('expense')}
+            className={`${styles.typeBtn} ${type === 'EXPENSE' ? styles.activeExpense : ''}`}
+            onClick={() => setType('EXPENSE')}
           >
             ▼ Expense
           </button>
@@ -63,17 +91,33 @@ export default function AddModal({ onClose }) {
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Date</label>
-          <input
-            className="form-input"
-            type="date"
-            defaultValue={new Date().toISOString().split('T')[0]}
-          />
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">Date</label>
+            <input
+              className="form-input"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Note (optional)</label>
+            <input
+              className="form-input"
+              placeholder="Any notes..."
+              value={note}
+              onChange={e => setNote(e.target.value)}
+            />
+          </div>
         </div>
 
-        <button className="btn-primary" onClick={onClose} style={{ marginTop: 8 }}>
-          Save Transaction →
+        {error && (
+          <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</div>
+        )}
+
+        <button className="btn-primary" onClick={handleSave} disabled={loading} style={{ marginTop: 8 }}>
+          {loading ? 'Saving…' : 'Save Transaction →'}
         </button>
       </div>
     </div>

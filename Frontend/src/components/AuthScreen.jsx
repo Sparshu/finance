@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import styles from './AuthScreen.module.css'
+import { authApi } from '../api/services'
 
 export default function AuthScreen({ onLogin }) {
-  const [mode, setMode]     = useState('login')
-  const [email, setEmail]   = useState('')
-  const [pass, setPass]     = useState('')
-  const [name, setName]     = useState('')
+  const [mode,    setMode]    = useState('login')
+  const [email,   setEmail]   = useState('')
+  const [pass,    setPass]    = useState('')
+  const [name,    setName]    = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
 
   const barHeights = [40,70,55,85,60,90,50,75,65,95,48,80]
   const barColors  = [
@@ -116,11 +119,35 @@ export default function AuthScreen({ onLogin }) {
           </div>
         )}
 
+        {error && (
+          <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12, padding: '8px 12px', background: 'var(--red-bg, #fff0f0)', borderRadius: 6 }}>
+            {error}
+          </div>
+        )}
+
         <button
           className="btn-primary"
-          onClick={() => onLogin(name || 'Rahul Sharma', email || 'rahul@example.com')}
+          disabled={loading}
+          onClick={async () => {
+            setError('')
+            setLoading(true)
+            try {
+              let res
+              if (mode === 'login') {
+                res = await authApi.login(email, pass)
+              } else {
+                res = await authApi.register(name, email, pass)
+              }
+              localStorage.setItem('finio_token', res.token)
+              onLogin(res.name, res.email)
+            } catch (e) {
+              setError(e.message || 'Authentication failed')
+            } finally {
+              setLoading(false)
+            }
+          }}
         >
-          {mode === 'login' ? 'Sign In →' : 'Create Account →'}
+          {loading ? 'Please wait…' : mode === 'login' ? 'Sign In →' : 'Create Account →'}
         </button>
 
         <div className={styles.divider}>or</div>
