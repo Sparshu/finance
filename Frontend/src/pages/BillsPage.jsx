@@ -7,7 +7,8 @@ import styles from './BillsPage.module.css'
 const BILL_ICONS = ['📺','🌐','💳','🛡️','🎵','💡','📱','🏠','🚗','☎️']
 
 export default function BillsPage() {
-  const { data: bills, loading, refetch } = useApi(billApi.getAll)
+  const toast = useToast()
+    const { data: bills, loading, refetch } = useApi(billApi.getAll)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', icon: '📺', amount: '', dueDay: '1' })
   const [saving, setSaving] = useState(false)
@@ -36,12 +37,12 @@ export default function BillsPage() {
   }
 
   const handlePay = async (id) => {
-    try { await billApi.markPaid(id); refetch() } catch (e) { alert(e.message) }
+    try { await billApi.markPaid(id); toast.success('Bill marked as paid!'); refetch() } catch (e) { toast.error(e.message) }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this bill?')) return
-    try { await billApi.delete(id); refetch() } catch (e) { alert(e.message) }
+    try { await billApi.delete(id); toast.success('Bill deleted'); refetch() } catch (e) { toast.error(e.message) }
   }
 
   const statusBadge = (s) => {

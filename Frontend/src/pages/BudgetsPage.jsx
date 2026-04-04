@@ -19,7 +19,8 @@ export default function BudgetsPage() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
 
-  const { data: budgets, loading, refetch } = useApi(() => budgetApi.getAll(month, year), [month, year])
+  const toast = useToast()
+    const { data: budgets, loading, refetch } = useApi(() => budgetApi.getAll(month, year), [month, year])
 
   const handleAdd = async () => {
     if (!limit || isNaN(limit) || Number(limit) <= 0) return setFormError('Enter a valid limit')
@@ -27,6 +28,7 @@ export default function BudgetsPage() {
     setFormError('')
     try {
       await budgetApi.create({ category, limit: Number(limit), month, year })
+      toast.success('Budget created!')
       setLimit('')
       setShowForm(false)
       refetch()
@@ -39,7 +41,7 @@ export default function BudgetsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Remove this budget?')) return
-    try { await budgetApi.delete(id); refetch() } catch (e) { alert(e.message) }
+    try { await budgetApi.delete(id); toast.success('Budget removed'); refetch() } catch (e) { toast.error(e.message) }
   }
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']

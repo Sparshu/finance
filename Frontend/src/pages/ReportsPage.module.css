@@ -1,6 +1,6 @@
 .donutWrap {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 24px;
 }
 
@@ -9,11 +9,78 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background .15s;
+  cursor: default;
 }
+.legendItem:hover { background: var(--bg3); }
 
 .legendDot {
-  width: 10px; height: 10px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* Bar chart */
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 160px;
+  padding: 0 4px;
+}
+.chartCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+.barPair {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.barIncome, .barExpense {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  transform-origin: bottom;
+  animation: bar-grow .8s cubic-bezier(.16,1,.3,1) both;
+}
+.barIncome  { background: var(--green); opacity: .8; }
+.barExpense { background: var(--red);   opacity: .7; }
+.barLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border-bottom: 1px solid var(--border);
+}
+.table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg3); }

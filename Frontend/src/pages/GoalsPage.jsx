@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { useApi } from '../api/useApi'
 import { goalApi } from '../api/services'
+import { useToast } from '../components/Toast'
+import { CardSkeleton } from '../components/Skeleton'
 import { fmt } from '../data/sampleData'
 import styles from './GoalsPage.module.css'
 
-const GOAL_ICONS = ['🛡️','💻','✈️','🚗','🏠','💍','📚','🎓','💰','🌍']
+const GOAL_ICONS = ['🛡️','💻','✈️','🚗','🏠','💍','📚','🎓','💰','🌍','🏋️','🎯']
 
 export default function GoalsPage() {
+  const toast = useToast()
   const { data: goals, loading, refetch } = useApi(goalApi.getAll)
   const [showForm, setShowForm] = useState(false)
   const [addAmount, setAddAmount] = useState({})
   const [form, setForm] = useState({ name: '', icon: '🛡️', targetAmount: '', savedAmount: '', targetDate: '' })
   const [saving, setSaving] = useState(false)
-  const [error, setError]   = useState('')
+  const [error, setError] = useState('')
 
   const handleCreate = async () => {
     if (!form.name.trim()) return setError('Name is required')
@@ -20,43 +23,45 @@ export default function GoalsPage() {
     setSaving(true); setError('')
     try {
       await goalApi.create({
-        name: form.name,
-        icon: form.icon,
+        name: form.name, icon: form.icon,
         targetAmount: Number(form.targetAmount),
         savedAmount:  Number(form.savedAmount) || 0,
         targetDate:   form.targetDate || null,
       })
       setForm({ name: '', icon: '🛡️', targetAmount: '', savedAmount: '', targetDate: '' })
       setShowForm(false)
+      toast.success('Goal created!')
       refetch()
     } catch (e) { setError(e.message) } finally { setSaving(false) }
   }
 
   const handleAddSaving = async (id) => {
     const amt = Number(addAmount[id])
-    if (!amt || amt <= 0) return
+    if (!amt || amt <= 0) return toast.error('Enter a valid amount')
     try {
       await goalApi.addSaving(id, amt)
       setAddAmount(s => ({ ...s, [id]: '' }))
+      toast.success(`₹${amt.toLocaleString('en-IN')} added!`)
       refetch()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast.error(e.message) }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this goal?')) return
-    try { await goalApi.delete(id); refetch() } catch (e) { alert(e.message) }
+    try { await goalApi.delete(id); toast.success('Goal deleted'); refetch() }
+    catch (e) { toast.error(e.message) }
   }
 
   return (
     <div className="page-anim">
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
-        <button className="btn-primary" onClick={() => setShowForm(s => !s)} style={{ padding: '8px 18px', fontSize: 13 }}>
+        <button className="btn-primary" onClick={() => setShowForm(s => !s)} style={{ padding: '8px 18px', fontSize: 13, width: 'auto' }}>
           {showForm ? '✕ Cancel' : '+ New Goal'}
         </button>
       </div>
 
       {showForm && (
-        <div className="card" style={{ marginBottom: 20 }}>
+        <div className="card" style={{ marginBottom: 20, borderColor: 'var(--green)' }}>
           <div className="section-title" style={{ marginBottom: 16 }}>New Savings Goal</div>
           <div className="form-row">
             <div className="form-group">
@@ -90,19 +95,26 @@ export default function GoalsPage() {
               onChange={e => setForm(s => ({ ...s, targetDate: e.target.value }))} />
           </div>
           {error && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
-          <button className="btn-primary" onClick={handleCreate} disabled={saving} style={{ padding: '8px 20px', fontSize: 13 }}>
+          <button className="btn-primary" onClick={handleCreate} disabled={saving} style={{ padding: '8px 20px', fontSize: 13, width: 'auto' }}>
             {saving ? 'Saving…' : 'Create Goal'}
           </button>
         </div>
       )}
 
-      {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Loading goals…</div>}
+      {loading && <div className="grid-2"><CardSkeleton lines={4} /><CardSkeleton lines={4} /></div>}
+
+      {!loading && (!goals || goals.length === 0) && (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text2)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>◈</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13 }}>No savings goals yet — create your first one!</div>
+        </div>
+      )}
 
       <div className="grid-2">
         {!loading && (goals || []).map((g, i) => (
           <div className={`card ${styles.goalCard}`} key={g.id} style={{ animationDelay: i * 0.08 + 's', position: 'relative' }}>
             <button onClick={() => handleDelete(g.id)}
-              style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}>✕</button>
+              style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 14 }}>✕</button>
             <div className={styles.goalHeader}>
               <div className={styles.goalIcon}>{g.icon || '🎯'}</div>
               <div>
@@ -121,7 +133,10 @@ export default function GoalsPage() {
               </div>
             </div>
             <div className="progress-wrap" style={{ margin: '12px 0' }}>
-              <div className="progress-fill" style={{ width: Math.min(g.progressPercent, 100) + '%', background: 'var(--green)' }} />
+              <div className="progress-fill" style={{
+                width: Math.min(g.progressPercent, 100) + '%',
+                background: g.progressPercent >= 100 ? 'var(--green)' : g.progressPercent > 60 ? 'var(--blue)' : 'var(--amber)'
+              }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text2)', marginBottom: 12, fontFamily: 'var(--mono)' }}>
               <span>{g.progressPercent}% reached</span>
@@ -132,22 +147,18 @@ export default function GoalsPage() {
                 className="form-input"
                 type="number"
                 placeholder="Add ₹ amount"
-                style={{ flex: 1, padding: '6px 10px', fontSize: 12 }}
+                style={{ flex: 1, padding: '7px 10px', fontSize: 12 }}
                 value={addAmount[g.id] || ''}
                 onChange={e => setAddAmount(s => ({ ...s, [g.id]: e.target.value }))}
+                onKeyDown={e => e.key === 'Enter' && handleAddSaving(g.id)}
               />
               <button className="btn-primary" onClick={() => handleAddSaving(g.id)}
-                style={{ padding: '6px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap', width: 'auto' }}>
                 + Add
               </button>
             </div>
           </div>
         ))}
-        {!loading && (!goals || goals.length === 0) && (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: 'var(--text2)' }}>
-            No savings goals yet — create your first one!
-          </div>
-        )}
       </div>
     </div>
   )
