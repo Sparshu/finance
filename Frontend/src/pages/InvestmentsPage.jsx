@@ -5,7 +5,8 @@ import { fmt } from '../data/sampleData'
 import styles from './InvestmentsPage.module.css'
 
 export default function InvestmentsPage() {
-  const { data: invs, loading, refetch } = useApi(investApi.getAll)
+  const toast = useToast()
+    const { data: invs, loading, refetch } = useApi(investApi.getAll)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ticker: '', name: '', quantity: '', buyPrice: '', currentPrice: '', purchaseDate: '' })
   const [priceUpdate, setPriceUpdate] = useState({})
@@ -39,14 +40,15 @@ export default function InvestmentsPage() {
     if (!price || price <= 0) return
     try {
       await investApi.updatePrice(id, price)
+      toast.success('Price updated!')
       setPriceUpdate(s => ({ ...s, [id]: '' }))
       refetch()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast.error(e.message) }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Remove this investment?')) return
-    try { await investApi.delete(id); refetch() } catch (e) { alert(e.message) }
+    try { await investApi.delete(id); toast.success('Investment removed'); refetch() } catch (e) { toast.error(e.message) }
   }
 
   return (
