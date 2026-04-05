@@ -6,13 +6,13 @@ import { fmt } from '../data/sampleData'
 import styles from './ReportsPage.module.css'
 
 const CAT_COLORS = {
-  Food: 'var(--green)', Transport: 'var(--blue)', Entertainment: 'var(--red)',
+  Food: 'var(--accent)', Transport: 'var(--blue)', Entertainment: 'var(--red)',
   Health: 'var(--amber)', Shopping: 'var(--purple)', Bills: 'var(--blue)',
-  Income: 'var(--green)', Other: 'var(--text2)',
+  Income: 'var(--accent)', Other: 'var(--text2)',
 }
 
 const COLOR_LIST = [
-  'var(--green)', 'var(--blue)', 'var(--amber)', 'var(--red)',
+  'var(--accent)', 'var(--blue)', 'var(--amber)', 'var(--red)',
   'var(--purple)', '#00bcd4', '#ff9800', '#e91e63',
 ]
 
@@ -135,10 +135,10 @@ export default function ReportsPage() {
       {/* Summary KPIs */}
       <div className="grid-4 mb12">
         {[
-          { label: 'Total Income',   value: fmt(totals.income),  color: 'var(--green)' },
+          { label: 'Total Income',   value: fmt(totals.income),  color: 'var(--accent)' },
           { label: 'Total Expense',  value: fmt(totals.expense), color: 'var(--red)'   },
           { label: 'Net Savings',    value: fmt(totals.net),     color: totals.net >= 0 ? 'var(--blue)' : 'var(--red)' },
-          { label: 'Savings Rate',   value: `${savingsRate}%`,   color: savingsRate > 20 ? 'var(--green)' : savingsRate > 0 ? 'var(--amber)' : 'var(--red)' },
+          { label: 'Savings Rate',   value: `${savingsRate}%`,   color: savingsRate > 20 ? 'var(--accent)' : savingsRate > 0 ? 'var(--amber)' : 'var(--red)' },
         ].map((c, i) => (
           <div className="card" key={i} style={{ animationDelay: i * 0.06 + 's', borderTop: `2px solid ${c.color}` }}>
             <div className="card-label">{c.label}</div>
@@ -175,7 +175,7 @@ export default function ReportsPage() {
           <div className="section-header">
             <div className="section-title">Income vs Expenses</div>
             <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: 'var(--mono)' }}>
-              <span style={{ color: 'var(--green)' }}>▬ Income</span>
+              <span style={{ color: 'var(--accent)' }}>▬ Income</span>
               <span style={{ color: 'var(--red)' }}>▬ Expense</span>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function ReportsPage() {
                 return (
                   <tr key={i}>
                     <td style={{ fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{d.m}</td>
-                    <td style={{ color: 'var(--green)', fontFamily: 'var(--mono)' }}>{fmt(d.income)}</td>
+                    <td style={{ color: 'var(--accent)', fontFamily: 'var(--mono)' }}>{fmt(d.income)}</td>
                     <td style={{ color: 'var(--red)',   fontFamily: 'var(--mono)' }}>{fmt(d.expense)}</td>
                     <td style={{ color: d.saved >= 0 ? 'var(--blue)' : 'var(--red)', fontFamily: 'var(--mono)', fontWeight: 500 }}>
                       {d.saved >= 0 ? '+' : ''}{fmt(d.saved)}
@@ -222,7 +222,7 @@ export default function ReportsPage() {
                           <div style={{
                             height: '100%', borderRadius: 100,
                             width: maxVal > 0 ? (d.income / maxVal * 100) + '%' : '0%',
-                            background: 'var(--green)', opacity: .6,
+                            background: 'var(--accent)', opacity: .6,
                           }} />
                         </div>
                         <div style={{ flex: 1, background: 'var(--bg3)', borderRadius: 100, height: 5, overflow: 'hidden' }}>

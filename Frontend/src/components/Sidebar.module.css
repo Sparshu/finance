@@ -1,5 +1,5 @@
 .sidebar {
-  background: var(--bg2);
+  background: rgba(255,255,255,0.9);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -7,59 +7,69 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .brand {
-  padding: 28px 24px 20px;
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 800;
+  padding: 24px 20px 18px;
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 700;
   letter-spacing: -0.5px;
   border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
-.brand span { color: var(--green); }
+.brand span { color: var(--accent); }
 
 .sectionLabel {
-  padding: 20px 24px 8px;
-  font-size: 10px;
-  font-family: var(--mono);
+  padding: 18px 20px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
   color: var(--text3);
-  letter-spacing: 1.2px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 20px;
-  margin: 2px 10px;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 9px 12px;
+  margin: 2px 8px;
+  border-radius: var(--radius);
   cursor: pointer;
   color: var(--text2);
   font-size: 13.5px;
   font-weight: 400;
-  transition: background .15s, color .15s;
-  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s;
 }
 .navItem:hover { background: var(--bg3); color: var(--text); }
 .active {
-  background: var(--green-bg) !important;
-  border-color: rgba(0,230,118,0.15) !important;
-  color: var(--green) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
   font-weight: 500;
 }
 
 .navIcon {
-  width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  background: var(--bg3);
+  transition: background 0.15s;
+}
+.active .navIcon {
+  background: var(--accent-soft);
 }
 
 .footer {
   margin-top: auto;
-  padding: 16px 14px;
+  padding: 14px 12px;
   border-top: 1px solid var(--border);
 }
 
@@ -67,26 +77,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 10px 10px;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background .15s;
+  transition: background 0.15s;
 }
 .userPill:hover { background: var(--bg3); }
 
 .avatar {
-  width: 34px; height: 34px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--display);
-  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--blue) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
   font-size: 13px;
-  color: #0d0f0e;
+  color: #fff;
   flex-shrink: 0;
 }
 
-.userName  { font-size: 13px; font-weight: 500; }
+.userName  { font-size: 13px; font-weight: 500; color: var(--text); }
 .userEmail { font-size: 11px; color: var(--text2); }
 
 .logoutBtn {
@@ -97,6 +109,7 @@
   cursor: pointer;
   font-size: 16px;
   padding: 4px;
-  transition: color .15s;
+  transition: color 0.15s;
+  border-radius: 6px;
 }
-.logoutBtn:hover { color: var(--red); }
+.logoutBtn:hover { color: var(--red); background: var(--red-soft); }

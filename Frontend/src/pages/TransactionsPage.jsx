@@ -71,7 +71,7 @@ function EditRow({ tx, onSave, onCancel }) {
           {saving ? 'Saving…' : '✓ Save'}
         </button>
         <button onClick={onCancel}
-          style={{ flex: 1, padding: '8px', fontSize: 12, background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10, color: 'var(--text2)', cursor: 'pointer' }}>
+          style={{ flex: 1, padding: '8px', fontSize: 12, background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 10, color: 'var(--text2)', cursor: 'pointer' }}>
           Cancel
         </button>
       </div>
@@ -148,7 +148,7 @@ export default function TransactionsPage({ onAdd }) {
               <EditRow tx={t} onSave={() => { setEditId(null); refetch() }} onCancel={() => setEditId(null)} />
             ) : (
               <div className={styles.txRow} style={{ animationDelay: i * 0.03 + 's' }}>
-                <div className={styles.txIcon} style={{ background: t.type === 'INCOME' ? 'var(--green-bg)' : 'var(--amber-bg)' }}>
+                <div className={styles.txIcon} style={{ background: t.type === 'INCOME' ? 'var(--accent-soft)' : 'var(--amber-bg)' }}>
                   {TX_ICONS[t.category] || '💸'}
                 </div>
                 <div className={styles.txInfo}>
@@ -156,7 +156,7 @@ export default function TransactionsPage({ onAdd }) {
                   <div className={styles.txMeta}>{t.category} · {t.date}{t.note ? ` · ${t.note}` : ''}</div>
                 </div>
                 <div className={styles.txRight}>
-                  <div className={styles.txAmount} style={{ color: t.type === 'INCOME' ? 'var(--green)' : 'var(--red)' }}>
+                  <div className={styles.txAmount} style={{ color: t.type === 'INCOME' ? 'var(--accent)' : 'var(--red)' }}>
                     {t.type === 'INCOME' ? '+' : '-'}{fmt(t.amount)}
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>

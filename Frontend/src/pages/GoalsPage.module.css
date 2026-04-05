@@ -1,5 +1,5 @@
 .goalCard {
-  border-top: 2px solid var(--green);
+  border-top: 2px solid var(--accent);
   transition: border-color .2s, transform .15s;
   animation: fadeUp .4s ease both;
 }
@@ -19,6 +19,6 @@
   align-items: flex-end;
   margin-bottom: 4px;
 }
-.goalSaved  { font-family: var(--mono); font-size: 22px; color: var(--green); letter-spacing: -1px; }
-.goalTarget { font-family: var(--mono); font-size: 15px; color: var(--text2); }
-.goalLabel  { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.goalSaved  { font-size: 22px; color: var(--accent); letter-spacing: -1px; }
+.goalTarget { font-size: 15px; color: var(--text2); }
+.goalLabel  { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }

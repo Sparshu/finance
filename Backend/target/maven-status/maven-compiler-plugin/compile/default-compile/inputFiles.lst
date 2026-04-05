@@ -1,6 +1,7 @@
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\config\GlobalExceptionHandler.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\config\SecurityConfig.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\config\UserDetailsConfig.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\AiController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\AuthController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\BillController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\BudgetController.java
@@ -8,11 +9,13 @@ D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\DashboardControl
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\InvestmentController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\SavingsGoalController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\TransactionController.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\UserController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\AuthResponse.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\BillRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\BillResponse.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\BudgetRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\BudgetResponse.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\ChangePasswordRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\DashboardResponse.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\InvestmentRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\InvestmentResponse.java
@@ -22,6 +25,7 @@ D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\SavingsGoalRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\SavingsGoalResponse.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\TransactionRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\TransactionResponse.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\dto\UpdateProfileRequest.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\entity\Bill.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\entity\Budget.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\entity\Investment.java
@@ -44,3 +48,4 @@ D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\DashboardService.ja
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\InvestmentService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\SavingsGoalService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\TransactionService.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\UserService.java
