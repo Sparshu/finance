@@ -12,16 +12,17 @@ export default function AuthScreen({ onLogin }) {
 
   const barHeights = [40,70,55,85,60,90,50,75,65,95,48,80]
   const barColors  = [
-    'var(--green)','var(--blue)','var(--green)','var(--amber)',
-    'var(--green)','var(--green)','var(--blue)','var(--amber)',
-    'var(--green)','var(--green)','var(--blue)','var(--green)',
+    'var(--accent)','var(--blue)','var(--accent)','var(--amber)',
+    'var(--accent)','var(--accent)','var(--blue)','var(--amber)',
+    'var(--accent)','var(--accent)','var(--blue)','var(--teal)',
   ]
 
   return (
     <div className={styles.authWrap}>
-      {/* ── Hero panel ── */}
+      {/* Hero panel */}
       <div className={styles.authHero}>
-        <div className={styles.heroGrid} />
+        <div className={styles.heroOrb1} />
+        <div className={styles.heroOrb2} />
         <div className={styles.heroBrand}>fin<span>io</span></div>
 
         <div className={styles.heroContent}>
@@ -43,7 +44,7 @@ export default function AuthScreen({ onLogin }) {
                   height: h + '%',
                   background: barColors[i],
                   animationDelay: i * 0.04 + 's',
-                  opacity: 0.6 + (h / 100) * 0.4,
+                  opacity: 0.55 + (h / 100) * 0.45,
                 }}
               />
             ))}
@@ -65,10 +66,10 @@ export default function AuthScreen({ onLogin }) {
           </div>
         </div>
 
-        <div className={styles.heroFooter}>© 2024 Finio — Built with Spring Boot + React</div>
+        <div className={styles.heroFooter}>© 2025 Finio — Your Personal Finance Assistant</div>
       </div>
 
-      {/* ── Auth panel ── */}
+      {/* Auth panel */}
       <div className={styles.authPanel}>
         <h2 className={styles.authTitle}>
           {mode === 'login' ? 'Welcome back' : 'Create account'}
@@ -79,85 +80,80 @@ export default function AuthScreen({ onLogin }) {
             : 'Start tracking your finances today'}
         </p>
 
-        {mode === 'register' && (
+        <div className={styles.authForm}>
+          {mode === 'register' && (
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input
+                className="form-input"
+                placeholder="Rahul Sharma"
+                value={name}
+                onChange={e => setName(e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="form-group">
-            <label className="form-label">Full Name</label>
+            <label className="form-label">Email</label>
             <input
               className="form-input"
-              placeholder="Rahul Sharma"
-              value={name}
-              onChange={e => setName(e.target.value)}
+              type="email"
+              placeholder="rahul@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
           </div>
-        )}
 
-        <div className="form-group">
-          <label className="form-label">Email</label>
-          <input
-            className="form-input"
-            type="email"
-            placeholder="rahul@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Password</label>
-          <input
-            className="form-input"
-            type="password"
-            placeholder="••••••••"
-            value={pass}
-            onChange={e => setPass(e.target.value)}
-          />
-        </div>
-
-        {mode === 'login' && (
-          <div style={{ textAlign: 'right', marginBottom: 20 }}>
-            <a className={styles.forgotLink}>Forgot password?</a>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              className="form-input"
+              type="password"
+              placeholder="••••••••"
+              value={pass}
+              onChange={e => setPass(e.target.value)}
+            />
           </div>
-        )}
 
-        {error && (
-          <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12, padding: '8px 12px', background: 'var(--red-bg, #fff0f0)', borderRadius: 6 }}>
-            {error}
-          </div>
-        )}
-
-        <button
-          className="btn-primary"
-          disabled={loading}
-          onClick={async () => {
-            setError('')
-            setLoading(true)
-            try {
-              let res
-              if (mode === 'login') {
-                res = await authApi.login(email, pass)
-              } else {
-                res = await authApi.register(name, email, pass)
-              }
-              localStorage.setItem('finio_token', res.token)
-              onLogin(res.name, res.email)
-            } catch (e) {
-              setError(e.message || 'Authentication failed')
-            } finally {
-              setLoading(false)
-            }
-          }}
-        >
-          {loading ? 'Please wait…' : mode === 'login' ? 'Sign In →' : 'Create Account →'}
-        </button>
-
-        <div className={styles.divider}>or</div>
-
-        <div className={styles.authSwitch}>
-          {mode === 'login' ? (
-            <>Don't have an account? <a onClick={() => setMode('register')}>Sign up free</a></>
-          ) : (
-            <>Already have an account? <a onClick={() => setMode('login')}>Sign in</a></>
+          {error && (
+            <div className={styles.authError}>{error}</div>
           )}
+
+          <button
+            className="btn-primary"
+            style={{ marginTop: 8 }}
+            disabled={loading}
+            onClick={async () => {
+              setError('')
+              setLoading(true)
+              try {
+                let res
+                if (mode === 'login') {
+                  res = await authApi.login(email, pass)
+                } else {
+                  res = await authApi.register(name, email, pass)
+                }
+                localStorage.setItem('finio_token', res.token)
+                onLogin(res.name, res.email)
+              } catch (e) {
+                setError(e.message || 'Authentication failed')
+              } finally {
+                setLoading(false)
+              }
+            }}
+          >
+            {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
+          </button>
+
+          <div className="divider">or</div>
+
+          <div className={styles.authLink}>
+            {mode === 'login' ? (
+              <>Don't have an account? <span onClick={() => setMode('register')}>Sign up free</span></>
+            ) : (
+              <>Already have an account? <span onClick={() => setMode('login')}>Sign in</span></>
+            )}
+          </div>
         </div>
       </div>
     </div>

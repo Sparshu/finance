@@ -69,5 +69,9 @@ export const PAGE_TITLES = {
 
 export const CATEGORIES = ['Food', 'Transport', 'Health', 'Shopping', 'Entertainment', 'Bills', 'Income', 'Other']
 
-export const fmt = (n) => '₹' + n.toLocaleString('en-IN')
+export const fmt = (n) => {
+  const num = Number(n)
+  if (isNaN(num)) return '₹0'
+  return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
 export const now = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })

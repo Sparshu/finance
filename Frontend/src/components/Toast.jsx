@@ -41,9 +41,9 @@ export function ToastProvider({ children }) {
             onClick={() => remove(t.id)}
             style={{
               pointerEvents: 'all',
-              background: t.type === 'error' ? 'var(--red-bg)' : t.type === 'info' ? 'var(--blue-bg)' : 'var(--green-bg)',
-              border: `1px solid ${t.type === 'error' ? 'var(--red)' : t.type === 'info' ? 'var(--blue)' : 'var(--green)'}`,
-              color: t.type === 'error' ? 'var(--red)' : t.type === 'info' ? 'var(--blue)' : 'var(--green)',
+              background: t.type === 'error' ? 'var(--red-bg)' : t.type === 'info' ? 'var(--blue-bg)' : 'var(--accent-soft)',
+              border: `1px solid ${t.type === 'error' ? 'var(--red)' : t.type === 'info' ? 'var(--blue)' : 'var(--accent)'}`,
+              color: t.type === 'error' ? 'var(--red)' : t.type === 'info' ? 'var(--blue)' : 'var(--accent)',
               borderRadius: 12,
               padding: '12px 18px',
               fontSize: 13,

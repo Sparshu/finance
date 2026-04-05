@@ -61,7 +61,7 @@ export default function GoalsPage() {
       </div>
 
       {showForm && (
-        <div className="card" style={{ marginBottom: 20, borderColor: 'var(--green)' }}>
+        <div className="card" style={{ marginBottom: 20, borderColor: 'var(--accent)' }}>
           <div className="section-title" style={{ marginBottom: 16 }}>New Savings Goal</div>
           <div className="form-row">
             <div className="form-group">
@@ -135,7 +135,7 @@ export default function GoalsPage() {
             <div className="progress-wrap" style={{ margin: '12px 0' }}>
               <div className="progress-fill" style={{
                 width: Math.min(g.progressPercent, 100) + '%',
-                background: g.progressPercent >= 100 ? 'var(--green)' : g.progressPercent > 60 ? 'var(--blue)' : 'var(--amber)'
+                background: g.progressPercent >= 100 ? 'var(--accent)' : g.progressPercent > 60 ? 'var(--blue)' : 'var(--amber)'
               }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text2)', marginBottom: 12, fontFamily: 'var(--mono)' }}>

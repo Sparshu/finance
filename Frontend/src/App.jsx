@@ -10,6 +10,8 @@ import InvestmentsPage  from './pages/InvestmentsPage'
 import BillsPage        from './pages/BillsPage'
 import ReportsPage      from './pages/ReportsPage'
 import ProfilePage      from './pages/ProfilePage'
+import NotificationsPanel from './components/NotificationsPanel'
+import AIChatbot from './components/AiChatBot'
 import { PAGE_TITLES, now } from './data/sampleData'
 
 const ALL_TITLES = {
@@ -19,24 +21,37 @@ const ALL_TITLES = {
 
 export default function App() {
   const [authed,     setAuthed]     = useState(() => !!localStorage.getItem('finio_token'))
-  const [user,       setUser]       = useState({ name: '', email: '' })
+  const [user,       setUser]       = useState(() => {
+    try {
+      const stored = localStorage.getItem('finio_user')
+      return stored ? JSON.parse(stored) : { name: '', email: '' }
+    } catch { return { name: '', email: '' } }
+  })
   const [page,       setPage]       = useState('dashboard')
   const [modal,      setModal]      = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const login = (name, email) => {
-    setUser({ name, email })
+    const u = { name, email }
+    setUser(u)
+    localStorage.setItem('finio_user', JSON.stringify(u))
     setAuthed(true)
   }
 
   const logout = () => {
     localStorage.removeItem('finio_token')
+    localStorage.removeItem('finio_user')
     setAuthed(false)
     setUser({ name: '', email: '' })
   }
 
   // Called after a transaction is saved to refresh dashboard data
   const onTransactionSaved = () => setRefreshKey(k => k + 1)
+
+  const onProfileUpdated = (updated) => {
+    setUser(updated)
+    localStorage.setItem('finio_user', JSON.stringify(updated))
+  }
 
   if (!authed) return <AuthScreen onLogin={login} />
 
@@ -48,7 +63,7 @@ export default function App() {
     investments:  <InvestmentsPage />,
     bills:        <BillsPage />,
     reports:      <ReportsPage />,
-    profile:      <ProfilePage user={user} onLogout={logout} />,
+    profile:      <ProfilePage user={user} onProfileUpdated={onProfileUpdated} onLogout={logout} />,
   }
 
   return (
@@ -63,10 +78,22 @@ export default function App() {
       <main className="main-content">
         <div className="topbar">
           <div className="page-title">{ALL_TITLES[page]}</div>
-          <div className="topbar-right">
+          <div className="topbar-actions">
             <div className="topbar-date">{now}</div>
-            <div className="btn-icon" title="Notifications">🔔</div>
-            <div className="btn-icon" title="Settings" onClick={() => setPage('profile')}>⚙</div>
+            <NotificationsPanel onNavigate={setPage} />
+            <div
+              title="Settings"
+              onClick={() => setPage('profile')}
+              style={{
+                width: 36, height: 36, borderRadius: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--bg2)', border: '1px solid var(--border2)',
+                cursor: 'pointer', fontSize: 16, color: 'var(--text2)',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--bg2)'}
+            >⚙</div>
           </div>
         </div>
 
@@ -81,6 +108,8 @@ export default function App() {
           onSaved={onTransactionSaved}
         />
       )}
+
+      <AIChatbot />
     </div>
   )
 }

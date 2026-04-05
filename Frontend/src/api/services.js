@@ -1,5 +1,13 @@
 import { api } from './client'
 
+// ── User / Profile ────────────────────────────────────────────────────────────
+export const userApi = {
+  getMe:          ()              => api.get('/users/me'),
+  updateProfile:  (name)          => api.patch('/users/me',          { name }),
+  changePassword: (currentPassword, newPassword) =>
+                                     api.patch('/users/me/password', { currentPassword, newPassword }),
+}
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
   login:    (email, password)              => api.post('/auth/login',    { email, password }),
