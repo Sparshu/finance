@@ -48,21 +48,25 @@ export const CHART_DATA = [
 ]
 
 export const NAV = [
-  { id: 'dashboard',    label: 'Dashboard',         icon: '⊞' },
-  { id: 'transactions', label: 'Transactions',      icon: '↕' },
-  { id: 'budgets',      label: 'Budgets',           icon: '◎' },
-  { id: 'goals',        label: 'Savings Goals',     icon: '◈' },
-  { id: 'investments',  label: 'Investments',       icon: '△' },
-  { id: 'bills',        label: 'Bills & Subs',      icon: '◷' },
-  { id: 'reports',      label: 'Reports',           icon: '◫' },
+  { id: 'dashboard',       label: 'Dashboard',         icon: '⊞' },
+  { id: 'transactions',    label: 'Transactions',      icon: '↕' },
+  { id: 'monthly',         label: 'Monthly Overview',  icon: '◑' },
+  { id: 'budgets',         label: 'Budgets',           icon: '◎' },
+  { id: 'goals',           label: 'Savings Goals',     icon: '◈' },
+  { id: 'investments',     label: 'Investments',       icon: '△' },
+  { id: 'networth',        label: 'Net Worth',         icon: '⚖' },
+  { id: 'bills',           label: 'Bills & Subs',      icon: '◷' },
+  { id: 'reports',         label: 'Reports',           icon: '◫' },
 ]
 
 export const PAGE_TITLES = {
   dashboard:    'Dashboard',
   transactions: 'Transactions',
+  monthly:      'Monthly Overview',
   budgets:      'Budgets',
   goals:        'Savings Goals',
   investments:  'Investments',
+  networth:     'Net Worth Tracker',
   bills:        'Bills & Subscriptions',
   reports:      'Reports',
 }

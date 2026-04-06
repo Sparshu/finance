@@ -65,3 +65,20 @@ export const billApi = {
   markPaid: (id)         => api.patch(`/bills/${id}/pay`),
   delete:   (id)         => api.delete(`/bills/${id}`),
 }
+// ── Recurring Transactions ────────────────────────────────────────────────────
+export const recurringApi = {
+  getAll:  ()          => api.get('/recurring'),
+  create:  (data)      => api.post('/recurring', data),
+  update:  (id, data)  => api.put(`/recurring/${id}`, data),
+  toggle:  (id)        => api.patch(`/recurring/${id}/toggle`),
+  runNow:  (id)        => api.post(`/recurring/${id}/run`),
+  delete:  (id)        => api.delete(`/recurring/${id}`),
+}
+
+// ── Net Worth ─────────────────────────────────────────────────────────────────
+export const netWorthApi = {
+  getAll:  ()          => api.get('/networth'),
+  create:  (data)      => api.post('/networth', data),
+  update:  (id, data)  => api.put(`/networth/${id}`, data),
+  delete:  (id)        => api.delete(`/networth/${id}`),
+}
