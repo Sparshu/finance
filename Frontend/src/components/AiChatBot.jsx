@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
+import { txApi, budgetApi, goalApi, investApi, recurringApi } from '../api/services'
 import styles from './AiChatBot.module.css'
 
 const SUGGESTIONS = [
-  'How should I allocate my ₹50,000 salary?',
-  'Am I overspending on wants?',
-  'How much should I save each month?',
-  'Explain the 50-30-20 rule',
+  'Analyze my spending this month',
+  'Am I on track with my budgets?',
+  'How are my savings goals progressing?',
+  'Give me a full 50-30-20 breakdown',
 ]
 
-// Standalone fetch — intentionally does NOT use the shared api client
-// so any AI error never triggers the global 401/403 logout handler
-async function callAiChat(messages) {
+async function callAiChat(messages, context) {
   const token = localStorage.getItem('finio_token')
 
   let res
@@ -21,9 +20,9 @@ async function callAiChat(messages) {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, context }),
     })
-  } catch (networkErr) {
+  } catch {
     throw new Error('Cannot reach server. Is the backend running?')
   }
 
@@ -35,7 +34,6 @@ async function callAiChat(messages) {
   }
 
   if (!res.ok) {
-    // Extract a plain string from whatever shape Spring Boot returns
     const msg =
       (typeof data.error === 'string' ? data.error : null) ||
       (typeof data.message === 'string' ? data.message : null) ||
@@ -47,18 +45,41 @@ async function callAiChat(messages) {
   return data
 }
 
+async function fetchUserContext() {
+  try {
+    const [txs, budgets, goals, investments, recurring] = await Promise.all([
+      txApi.getAll().catch(() => []),
+      budgetApi.getAll().catch(() => []),
+      goalApi.getAll().catch(() => []),
+      investApi.getAll().catch(() => []),
+      recurringApi.getAll().catch(() => []),
+    ])
+    return { txs, budgets, goals, investments, recurring }
+  } catch {
+    return {}
+  }
+}
+
 export default function AIChatbot() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hi! I'm **Finio AI** 👋 I'll help you budget smarter using the **50-30-20 rule**.\n\nShare your monthly income and I'll break down exactly how to allocate it!",
+      content: "Hi! I'm **Finio AI** 👋 I can see your actual transactions, budgets, goals and investments.\n\nAsk me anything about your finances and I'll give you personalized advice!",
     },
   ])
-  const [input, setInput] = useState('')
+  const [input,   setInput]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [context, setContext] = useState(null)
   const bottomRef = useRef(null)
-  const inputRef = useRef(null)
+  const inputRef  = useRef(null)
+
+  // Fetch user's financial data when panel opens
+  useEffect(() => {
+    if (open && !context) {
+      fetchUserContext().then(setContext)
+    }
+  }, [open])
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100)
@@ -73,8 +94,6 @@ export default function AIChatbot() {
     if (!userMsg || loading) return
     setInput('')
 
-    // Build API history: skip the initial assistant greeting (index 0),
-    // then append the new user message. API requires alternating roles starting with 'user'.
     const apiHistory = [
       ...messages.slice(1).map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: userMsg },
@@ -84,17 +103,16 @@ export default function AIChatbot() {
     setLoading(true)
 
     try {
-      const data = await callAiChat(apiHistory)
+      // Refetch context on each message to always have fresh data
+      const freshContext = await fetchUserContext()
+      setContext(freshContext)
+
+      const data = await callAiChat(apiHistory, freshContext)
       const reply = data.content?.map(b => b.text || '').join('') || 'Sorry, I had trouble responding.'
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
-      const errMsg = err instanceof Error
-        ? err.message
-        : (typeof err === 'string' ? err : 'Something went wrong. Please try again.')
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: '⚠️ ' + errMsg,
-      }])
+      const errMsg = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ ' + errMsg }])
     } finally {
       setLoading(false)
     }
@@ -112,13 +130,21 @@ export default function AIChatbot() {
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br/>')
 
+  // Show a small data indicator so user knows context is loaded
+  const hasContext = context && (
+    (context.txs?.length > 0) ||
+    (context.budgets?.length > 0) ||
+    (context.goals?.length > 0) ||
+    (context.recurring?.length > 0)
+  )
+
   return (
     <>
       {/* Floating Button */}
       <button
         className={`${styles.fab} ${open ? styles.fabOpen : ''}`}
         onClick={() => setOpen(o => !o)}
-        title="Finio AI – 50-30-20 Advisor"
+        title="Finio AI – Personal Finance Advisor"
         aria-label="Open AI chat"
       >
         {open ? (
@@ -146,7 +172,11 @@ export default function AIChatbot() {
               </div>
               <div>
                 <div className={styles.headerTitle}>Finio AI</div>
-                <div className={styles.headerSub}>50-30-20 Budget Advisor</div>
+                <div className={styles.headerSub}>
+                  {hasContext
+                    ? `📊 ${context.txs?.length || 0} txns · ${context.recurring?.length || 0} recurring`
+                    : 'Personal Finance Advisor'}
+                </div>
               </div>
             </div>
             <div className={styles.statusDot} title="Online" />
@@ -215,7 +245,7 @@ export default function AIChatbot() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Ask about budgeting..."
+              placeholder="Ask about your finances..."
               rows={1}
               disabled={loading}
             />

@@ -1,5 +1,5 @@
 .sidebar {
-  background: rgba(255,255,255,0.9);
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -9,6 +9,12 @@
   overflow-y: auto;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .sidebar {
+    background: var(--bg2);
+  }
 }
 
 .brand {

@@ -6,7 +6,7 @@
 }
 
 .authHero {
-  background: linear-gradient(145deg, #f0fdf8 0%, #e8f4ff 50%, #f5f0ff 100%);
+  background: linear-gradient(145deg, #0f1412 0%, #121a18 50%, #0d1110 100%);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;

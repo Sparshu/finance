@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import AuthScreen       from './components/AuthScreen'
-import Sidebar          from './components/Sidebar'
-import AddModal         from './components/AddModal'
-import DashboardPage    from './pages/DashboardPage'
-import TransactionsPage from './pages/TransactionsPage'
-import BudgetsPage      from './pages/BudgetsPage'
-import GoalsPage        from './pages/GoalsPage'
-import InvestmentsPage  from './pages/InvestmentsPage'
-import BillsPage        from './pages/BillsPage'
-import ReportsPage      from './pages/ReportsPage'
-import ProfilePage      from './pages/ProfilePage'
-import NotificationsPanel from './components/NotificationsPanel'
-import AIChatbot from './components/AiChatBot'
+import AuthScreen          from './components/AuthScreen'
+import Sidebar             from './components/Sidebar'
+import AddModal            from './components/AddModal'
+import DashboardPage       from './pages/DashboardPage'
+import TransactionsPage    from './pages/TransactionsPage'
+import MonthlyOverviewPage from './pages/MonthlyOverviewPage'
+import BudgetsPage         from './pages/BudgetsPage'
+import GoalsPage           from './pages/GoalsPage'
+import InvestmentsPage     from './pages/InvestmentsPage'
+import BillsPage           from './pages/BillsPage'
+import ReportsPage         from './pages/ReportsPage'
+import ProfilePage         from './pages/ProfilePage'
+import NetWorthPage        from './pages/NetWorthPage'
+import NotificationsPanel  from './components/NotificationsPanel'
+import AIChatbot           from './components/AiChatBot'
+import { useTheme }        from './api/UseTheme'
 import { PAGE_TITLES, now } from './data/sampleData'
 
 const ALL_TITLES = {
@@ -30,6 +33,8 @@ export default function App() {
   const [page,       setPage]       = useState('dashboard')
   const [modal,      setModal]      = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const { dark, toggle: toggleTheme } = useTheme()
 
   const login = (name, email) => {
     const u = { name, email }
@@ -58,9 +63,11 @@ export default function App() {
   const PAGES = {
     dashboard:    <DashboardPage    onAdd={() => setModal(true)} onRefreshKey={refreshKey} />,
     transactions: <TransactionsPage onAdd={() => setModal(true)} />,
+    monthly:      <MonthlyOverviewPage />,
     budgets:      <BudgetsPage />,
     goals:        <GoalsPage />,
     investments:  <InvestmentsPage />,
+    networth:     <NetWorthPage />,
     bills:        <BillsPage />,
     reports:      <ReportsPage />,
     profile:      <ProfilePage user={user} onProfileUpdated={onProfileUpdated} onLogout={logout} />,
@@ -73,6 +80,8 @@ export default function App() {
         setActive={setPage}
         user={user}
         onLogout={logout}
+        dark={dark}
+        onToggleTheme={toggleTheme}
       />
 
       <main className="main-content">

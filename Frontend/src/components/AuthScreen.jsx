@@ -66,7 +66,7 @@ export default function AuthScreen({ onLogin }) {
           </div>
         </div>
 
-        <div className={styles.heroFooter}>© 2025 Finio — Your Personal Finance Assistant</div>
+        <div className={styles.heroFooter}>© 2026 Finio — Your Personal Finance Assistant</div>
       </div>
 
       {/* Auth panel */}

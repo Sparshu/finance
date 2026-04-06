@@ -1,3 +1,4 @@
+com\finio\app\service\NetWorthService.class
 com\finio\app\dto\BudgetRequest.class
 com\finio\app\dto\TransactionRequest.class
 com\finio\app\service\BudgetService.class
@@ -6,8 +7,10 @@ com\finio\app\entity\SavingsGoal.class
 com\finio\app\entity\Bill$Builder.class
 com\finio\app\entity\Bill.class
 com\finio\app\entity\Investment$Builder.class
+com\finio\app\dto\NetWorthResponse.class
 com\finio\app\controller\AuthController.class
 com\finio\app\controller\SavingsGoalController.class
+com\finio\app\repository\NetWorthRepository.class
 com\finio\app\service\AuthService.class
 com\finio\app\entity\Budget$Builder.class
 com\finio\app\entity\Budget.class
@@ -15,8 +18,10 @@ com\finio\app\config\SecurityConfig.class
 com\finio\app\dto\AuthResponse$Builder.class
 com\finio\app\service\DashboardService.class
 com\finio\app\repository\TransactionRepository.class
+com\finio\app\dto\RecurringTransactionRequest.class
 com\finio\app\service\BillService.class
 com\finio\app\entity\Bill$BillStatus.class
+com\finio\app\service\RecurringTransactionService$1.class
 com\finio\app\service\SavingsGoalService.class
 com\finio\app\repository\InvestmentRepository.class
 com\finio\app\controller\AiController.class
@@ -25,11 +30,14 @@ com\finio\app\dto\UpdateProfileRequest.class
 com\finio\app\entity\User.class
 com\finio\app\entity\Investment.class
 com\finio\app\repository\BillRepository.class
+com\finio\app\repository\RecurringTransactionRepository.class
 com\finio\app\dto\InvestmentRequest.class
+com\finio\app\entity\NetWorthEntry.class
 com\finio\app\entity\User$Builder.class
 com\finio\app\security\JwtAuthFilter.class
 com\finio\app\dto\SavingsGoalResponse.class
 com\finio\app\controller\BudgetController.class
+com\finio\app\dto\NetWorthRequest.class
 com\finio\app\controller\UserController.class
 com\finio\app\controller\BillController.class
 com\finio\app\dto\BudgetResponse.class
@@ -38,6 +46,7 @@ com\finio\app\entity\SavingsGoal$Builder.class
 com\finio\app\config\GlobalExceptionHandler.class
 com\finio\app\repository\UserRepository.class
 com\finio\app\service\UserService.class
+com\finio\app\service\RecurringTransactionService.class
 com\finio\app\config\UserDetailsConfig.class
 com\finio\app\dto\ChangePasswordRequest.class
 com\finio\app\dto\RegisterRequest.class
@@ -48,7 +57,9 @@ com\finio\app\service\InvestmentService.class
 com\finio\app\controller\TransactionController.class
 com\finio\app\entity\Transaction.class
 com\finio\app\dto\DashboardResponse$Builder.class
+com\finio\app\entity\RecurringTransaction$Frequency.class
 com\finio\app\dto\InvestmentResponse.class
+com\finio\app\entity\NetWorthEntry$EntryType.class
 com\finio\app\dto\SavingsGoalRequest.class
 com\finio\app\FinioApplication.class
 com\finio\app\entity\Transaction$Builder.class
@@ -56,6 +67,10 @@ com\finio\app\entity\Transaction$TransactionType.class
 com\finio\app\controller\InvestmentController.class
 com\finio\app\security\JwtService.class
 com\finio\app\dto\TransactionResponse.class
+com\finio\app\dto\RecurringTransactionResponse.class
 com\finio\app\repository\BudgetRepository.class
+com\finio\app\controller\NetWorthController.class
 com\finio\app\dto\LoginRequest.class
+com\finio\app\controller\RecurringTransactionController.class
+com\finio\app\entity\RecurringTransaction.class
 com\finio\app\dto\DashboardResponse.class
