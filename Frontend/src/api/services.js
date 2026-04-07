@@ -77,8 +77,30 @@ export const recurringApi = {
 
 // ── Net Worth ─────────────────────────────────────────────────────────────────
 export const netWorthApi = {
-  getAll:  ()          => api.get('/networth'),
-  create:  (data)      => api.post('/networth', data),
-  update:  (id, data)  => api.put(`/networth/${id}`, data),
-  delete:  (id)        => api.delete(`/networth/${id}`),
+  getAll:          ()                    => api.get('/networth'),
+  create:          (data)                => api.post('/networth', data),
+  update:          (id, data)            => api.put(`/networth/${id}`, data),
+  delete:          (id)                  => api.delete(`/networth/${id}`),
+  rolloverSavings: (year, month)         => {
+    const q = year && month ? `?year=${year}&month=${month}` : ''
+    return api.post(`/networth/rollover-savings${q}`)
+  },
+}
+// ── Receipt Scanner ───────────────────────────────────────────────────────────
+export const receiptApi = {
+  scan: (imageBase64) => {
+    const token = localStorage.getItem('finio_token')
+    return fetch('http://localhost:8080/api/ai/scan-receipt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ image: imageBase64 }),
+    }).then(async res => {
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to scan receipt')
+      return data
+    })
+  }
 }
