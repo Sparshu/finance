@@ -13,12 +13,20 @@ public record NetWorthResponse(
         String category,
         BigDecimal amount,
         LocalDate date,
-        String note
+        String note,
+        String monthLabel  // e.g. "March 2025" — only set for MONTHLY_SAVINGS entries
 ) {
     public static NetWorthResponse from(NetWorthEntry e) {
+        String monthLabel = null;
+        if (e.getType() == EntryType.MONTHLY_SAVINGS && e.getDate() != null) {
+            monthLabel = e.getDate().getMonth().getDisplayName(
+                java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH)
+                + " " + e.getDate().getYear();
+        }
         return new NetWorthResponse(
                 e.getId(), e.getName(), e.getType(),
-                e.getCategory(), e.getAmount(), e.getDate(), e.getNote()
+                e.getCategory(), e.getAmount(), e.getDate(), e.getNote(),
+                monthLabel
         );
     }
 }

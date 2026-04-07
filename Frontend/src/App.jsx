@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AuthScreen          from './components/AuthScreen'
 import Sidebar             from './components/Sidebar'
 import AddModal            from './components/AddModal'
+import ReceiptScanner      from './components/ReceiptScanner'
 import DashboardPage       from './pages/DashboardPage'
 import TransactionsPage    from './pages/TransactionsPage'
 import MonthlyOverviewPage from './pages/MonthlyOverviewPage'
@@ -30,8 +31,10 @@ export default function App() {
       return stored ? JSON.parse(stored) : { name: '', email: '' }
     } catch { return { name: '', email: '' } }
   })
+  const [avatar,     setAvatar]     = useState(() => localStorage.getItem('finio_avatar') || null)
   const [page,       setPage]       = useState('dashboard')
   const [modal,      setModal]      = useState(false)
+  const [scanner,    setScanner]    = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const { dark, toggle: toggleTheme } = useTheme()
@@ -62,7 +65,7 @@ export default function App() {
 
   const PAGES = {
     dashboard:    <DashboardPage    onAdd={() => setModal(true)} onRefreshKey={refreshKey} />,
-    transactions: <TransactionsPage onAdd={() => setModal(true)} />,
+    transactions: <TransactionsPage onAdd={() => setModal(true)} onScanReceipt={() => setScanner(true)} />,
     monthly:      <MonthlyOverviewPage />,
     budgets:      <BudgetsPage />,
     goals:        <GoalsPage />,
@@ -70,7 +73,7 @@ export default function App() {
     networth:     <NetWorthPage />,
     bills:        <BillsPage />,
     reports:      <ReportsPage />,
-    profile:      <ProfilePage user={user} onProfileUpdated={onProfileUpdated} onLogout={logout} />,
+    profile:      <ProfilePage user={user} avatar={avatar} onAvatarChange={setAvatar} onProfileUpdated={onProfileUpdated} onLogout={logout} />,
   }
 
   return (
@@ -79,6 +82,7 @@ export default function App() {
         active={page}
         setActive={setPage}
         user={user}
+        avatar={avatar}
         onLogout={logout}
         dark={dark}
         onToggleTheme={toggleTheme}
@@ -89,6 +93,19 @@ export default function App() {
           <div className="page-title">{ALL_TITLES[page]}</div>
           <div className="topbar-actions">
             <div className="topbar-date">{now}</div>
+            <div
+              title="Scan Receipt"
+              onClick={() => setScanner(true)}
+              style={{
+                width: 36, height: 36, borderRadius: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--bg2)', border: '1px solid var(--border2)',
+                cursor: 'pointer', fontSize: 17, color: 'var(--text2)',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--bg2)'}
+            >🧾</div>
             <NotificationsPanel onNavigate={setPage} />
             <div
               title="Settings"
@@ -114,6 +131,13 @@ export default function App() {
       {modal && (
         <AddModal
           onClose={() => setModal(false)}
+          onSaved={onTransactionSaved}
+        />
+      )}
+
+      {scanner && (
+        <ReceiptScanner
+          onClose={() => setScanner(false)}
           onSaved={onTransactionSaved}
         />
       )}

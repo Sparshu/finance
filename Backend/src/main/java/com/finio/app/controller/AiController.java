@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.*;
 
 @RestController
@@ -18,7 +19,9 @@ public class AiController {
     @Value("${groq.api.key:}")
     private String groqApiKey;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(30))
+            .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String BASE_SYSTEM_PROMPT =
@@ -33,6 +36,118 @@ public class AiController {
         "Reference actual amounts, categories and percentages from their data. " +
         "Be warm, practical and concise and also use simple language to suggest. Format all currency in Indian rupees (Rs X,XX,XXX).\n\n"+
         "Also keep the answer short and precise don't give long answers";
+    @PostMapping("/scan-receipt")
+    public ResponseEntity<Map<String, Object>> scanReceipt(@RequestBody Map<String, Object> body) {
+        if (groqApiKey == null || groqApiKey.isBlank()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("error", "AI service not configured.");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(err);
+        }
+
+        try {
+            String imageBase64 = String.valueOf(body.get("image"));   // data:image/jpeg;base64,...
+            String mimeType    = imageBase64.contains("png") ? "image/png" : "image/jpeg";
+            // Strip the data URL prefix if present
+            String base64Data  = imageBase64.contains(",")
+                    ? imageBase64.substring(imageBase64.indexOf(',') + 1)
+                    : imageBase64;
+
+            // Guard: reject if base64 payload exceeds ~4MB (raw bytes ~3MB)
+            if (base64Data.length() > 4 * 1024 * 1024) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "Image is too large. Please use a smaller or lower-quality image.");
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(err);
+            }
+
+            String receiptPrompt =
+                "You are a receipt scanner for an Indian personal finance app called Finio. " +
+                "Analyze this receipt image and extract transaction details. " +
+                "Respond ONLY with a valid JSON object — no explanation, no markdown, no extra text. " +
+                "Use exactly this structure:\n" +
+                "{\n" +
+                "  \"name\": \"merchant or bill name (short, max 40 chars)\",\n" +
+                "  \"amount\": 1234.50,\n" +
+                "  \"type\": \"EXPENSE\",\n" +
+                "  \"category\": \"one of: Food, Transport, Health, Shopping, Entertainment, Bills, Other\",\n" +
+                "  \"date\": \"YYYY-MM-DD\",\n" +
+                "  \"note\": \"brief note about items purchased (max 80 chars)\"\n" +
+                "}\n" +
+                "Rules:\n" +
+                "- amount must be a number (no currency symbols)\n" +
+                "- date: use the receipt date, or today if not found: " + java.time.LocalDate.now() + "\n" +
+                "- category: pick the best match from the allowed list\n" +
+                "- If this is clearly income (salary slip etc), use type INCOME\n" +
+                "- Return ONLY the JSON, nothing else.";
+
+            // Build multimodal message with image
+            Map<String, Object> imageUrl = new HashMap<>();
+            imageUrl.put("url", "data:" + mimeType + ";base64," + base64Data);
+
+            Map<String, Object> imagePart = new HashMap<>();
+            imagePart.put("type", "image_url");
+            imagePart.put("image_url", imageUrl);
+
+            Map<String, Object> textPart = new HashMap<>();
+            textPart.put("type", "text");
+            textPart.put("text", receiptPrompt);
+
+            List<Object> contentParts = new ArrayList<>();
+            contentParts.add(imagePart);
+            contentParts.add(textPart);
+
+            Map<String, Object> userMsg = new HashMap<>();
+            userMsg.put("role", "user");
+            userMsg.put("content", contentParts);
+
+            List<Map<String, Object>> messages = new ArrayList<>();
+            messages.add(userMsg);
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", "meta-llama/llama-4-scout-17b-16e-instruct");
+            requestBody.put("messages", messages);
+            requestBody.put("max_tokens", 300);
+            requestBody.put("temperature", 0.1);  // Low temp for accurate extraction
+
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.groq.com/openai/v1/chat/completions"))
+                .timeout(Duration.ofSeconds(60))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + groqApiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> groqResponse = objectMapper.readValue(response.body(), Map.class);
+
+            if (response.statusCode() >= 400) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(groqResponse);
+            }
+
+            String rawText = extractGroqText(groqResponse);
+            System.out.println("Receipt AI raw: " + rawText);
+
+            // Parse the JSON the AI returned
+            String cleanJson = rawText.trim()
+                .replaceAll("(?s)```json\\s*", "")
+                .replaceAll("(?s)```\\s*", "")
+                .trim();
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> extracted = objectMapper.readValue(cleanJson, Map.class);
+
+            return ResponseEntity.ok(extracted);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> err = new HashMap<>();
+            err.put("error", "Failed to scan receipt: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(err);
+        }
+    }
+
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, Object> body) {
         if (groqApiKey == null || groqApiKey.isBlank()) {

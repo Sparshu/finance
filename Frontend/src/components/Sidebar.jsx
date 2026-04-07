@@ -3,7 +3,7 @@ import styles from './Sidebar.module.css'
 
 const EXTRA_NAV = [{ id: 'profile', label: 'Profile', icon: '◉' }]
 
-export default function Sidebar({ active, setActive, user, onLogout, dark, onToggleTheme }) {
+export default function Sidebar({ active, setActive, user, avatar, onLogout, dark, onToggleTheme }) {
   const initials = (user.name || 'U')
     .split(' ')
     .map(w => w[0])
@@ -80,7 +80,12 @@ export default function Sidebar({ active, setActive, user, onLogout, dark, onTog
 
       <div className={styles.footer}>
         <div className={styles.userPill} onClick={() => setActive('profile')} style={{ cursor: 'pointer' }}>
-          <div className={styles.avatar}>{initials}</div>
+          <div className={styles.avatar}>
+            {avatar
+              ? <img src={avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : initials
+            }
+          </div>
           <div>
             <div className={styles.userName}>{user.name || 'User'}</div>
             <div className={styles.userEmail}>{user.email}</div>

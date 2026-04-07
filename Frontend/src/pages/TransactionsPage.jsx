@@ -326,7 +326,7 @@ function RecurringTab() {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function TransactionsPage({ onAdd }) {
+export default function TransactionsPage({ onAdd, onScanReceipt }) {
   const [mainTab, setMainTab] = useState('transactions') // transactions | recurring
   const [filter,  setFilter]  = useState('ALL')
   const [editId,  setEditId]  = useState(null)
@@ -384,6 +384,15 @@ export default function TransactionsPage({ onAdd }) {
             <button className="btn-primary" onClick={onAdd}
               style={{ padding: '8px 18px', fontSize: 13, width: 'auto' }}>
               + Add
+            </button>
+            <button onClick={onScanReceipt}
+              style={{
+                padding: '8px 14px', fontSize: 13, width: 'auto',
+                background: 'var(--bg3)', border: '1px solid var(--border2)',
+                borderRadius: 'var(--radius)', color: 'var(--text)', cursor: 'pointer',
+                fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+              🧾 Scan
             </button>
           </div>
 

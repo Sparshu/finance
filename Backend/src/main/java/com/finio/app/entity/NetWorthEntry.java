@@ -43,7 +43,7 @@ public class NetWorthEntry {
 
     public NetWorthEntry() {}
 
-    public enum EntryType { ASSET, LIABILITY }
+    public enum EntryType { ASSET, LIABILITY, MONTHLY_SAVINGS }
 
     public Long getId()                         { return id; }
     public void setId(Long id)                  { this.id = id; }
