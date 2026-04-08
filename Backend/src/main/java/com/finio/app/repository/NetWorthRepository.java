@@ -4,6 +4,7 @@ import com.finio.app.entity.NetWorthEntry;
 import com.finio.app.entity.NetWorthEntry.EntryType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,5 +17,5 @@ public interface NetWorthRepository extends JpaRepository<NetWorthEntry, Long> {
     List<NetWorthEntry> findByUserIdAndTypeOrderByDateDesc(Long userId, EntryType type);
 
     @Query("SELECT e FROM NetWorthEntry e WHERE e.user.id = :userId AND e.type = 'MONTHLY_SAVINGS' AND e.date BETWEEN :from AND :to")
-    Optional<NetWorthEntry> findMonthlySavingsForPeriod(Long userId, LocalDate from, LocalDate to);
+    Optional<NetWorthEntry> findMonthlySavingsForPeriod(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }
