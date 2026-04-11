@@ -102,7 +102,7 @@ export const netWorthApi = {
 export const receiptApi = {
   scan: (imageBase64) => {
     const token = localStorage.getItem('finio_token')
-    return fetch('http://localhost:8080/api/ai/scan-receipt', {
+    return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/ai/scan-receipt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export const receiptApi = {
 export const nlApi = {
   parseTransaction: (text) => {
     const token = localStorage.getItem('finio_token')
-    return fetch('http://localhost:8080/api/ai/parse-transaction', {
+    return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/ai/parse-transaction`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
