@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "savings_goals")
@@ -34,6 +38,14 @@ public class SavingsGoal {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * Comma-separated list of milestone percentages already emailed.
+     * e.g. "25,50" means 25% and 50% emails have been sent, 75% and 100% have not.
+     * Null or empty means no milestones have been sent yet.
+     */
+    @Column(name = "milestones_sent", length = 20)
+    private String milestonesSent;
 
     public SavingsGoal() {}
 
@@ -66,6 +78,35 @@ public class SavingsGoal {
     public void setTargetDate(LocalDate d)           { this.targetDate = d; }
     public LocalDateTime getCreatedAt()              { return createdAt; }
     public void setCreatedAt(LocalDateTime t)        { this.createdAt = t; }
+    public String getMilestonesSent()                { return milestonesSent; }
+    public void setMilestonesSent(String s)          { this.milestonesSent = s; }
+
+    // ── Milestone helpers ─────────────────────────────────────────────────────
+
+    /** Returns the set of milestones already emailed, e.g. {25, 50} */
+    public Set<Integer> getSentMilestonesAsSet() {
+        if (milestonesSent == null || milestonesSent.isBlank()) return new HashSet<>();
+        return Arrays.stream(milestonesSent.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /** Marks a milestone as sent and persists it to the comma-separated string */
+    public void markMilestoneSent(int milestone) {
+        Set<Integer> sent = getSentMilestonesAsSet();
+        sent.add(milestone);
+        this.milestonesSent = sent.stream()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+    }
+
+    /** Returns true if this milestone has NOT been sent yet */
+    public boolean isMilestoneNotYetSent(int milestone) {
+        return !getSentMilestonesAsSet().contains(milestone);
+    }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {

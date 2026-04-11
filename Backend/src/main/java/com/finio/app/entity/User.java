@@ -28,6 +28,20 @@ public class User implements UserDetails {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // ── OTP Login ──────────────────────────────────────────────────────────────
+    @Column(name = "login_otp")
+    private String loginOtp;
+
+    @Column(name = "login_otp_expiry")
+    private LocalDateTime loginOtpExpiry;
+
+    // ── Forgot Password ────────────────────────────────────────────────────────
+    @Column(name = "reset_token", unique = true)
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
     public User() {}
 
     public User(Long id, String name, String email, String password, LocalDateTime createdAt) {
@@ -53,6 +67,16 @@ public class User implements UserDetails {
     public void setPassword(String password)   { this.password = password; }
     public LocalDateTime getCreatedAt()        { return createdAt; }
     public void setCreatedAt(LocalDateTime t)  { this.createdAt = t; }
+
+    public String getLoginOtp()                           { return loginOtp; }
+    public void setLoginOtp(String loginOtp)              { this.loginOtp = loginOtp; }
+    public LocalDateTime getLoginOtpExpiry()              { return loginOtpExpiry; }
+    public void setLoginOtpExpiry(LocalDateTime expiry)   { this.loginOtpExpiry = expiry; }
+
+    public String getResetToken()                         { return resetToken; }
+    public void setResetToken(String resetToken)          { this.resetToken = resetToken; }
+    public LocalDateTime getResetTokenExpiry()            { return resetTokenExpiry; }
+    public void setResetTokenExpiry(LocalDateTime expiry) { this.resetTokenExpiry = expiry; }
 
     // ── UserDetails ──
     @Override public String getPassword()                                      { return password; }

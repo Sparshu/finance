@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface InvestmentRepository extends JpaRepository<Investment, Long> {
     List<Investment> findByUserIdOrderByCreatedAtDesc(Long userId);
+    void deleteByUserId(Long userId);
 }

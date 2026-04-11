@@ -7,6 +7,7 @@ D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\BillController.j
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\BudgetController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\DashboardController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\InvestmentController.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\NaturalLanguageController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\NetWorthController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\RecurringTransactionController.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\controller\SavingsGoalController.java
@@ -55,8 +56,10 @@ D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\AuthService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\BillService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\BudgetService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\DashboardService.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\EmailService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\InvestmentService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\NetWorthService.java
+D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\NotificationScheduler.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\RecurringTransactionService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\SavingsGoalService.java
 D:\Codes\Finance\Backend\src\main\java\com\finio\app\service\TransactionService.java

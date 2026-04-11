@@ -1,5 +1,7 @@
 com\finio\app\service\NetWorthService.class
 com\finio\app\dto\BudgetRequest.class
+com\finio\app\service\NotificationScheduler.class
+com\finio\app\controller\NaturalLanguageController.class
 com\finio\app\dto\TransactionRequest.class
 com\finio\app\service\BudgetService.class
 com\finio\app\dto\BillRequest.class
@@ -26,6 +28,7 @@ com\finio\app\service\SavingsGoalService.class
 com\finio\app\repository\InvestmentRepository.class
 com\finio\app\controller\AiController.class
 com\finio\app\dto\BillResponse.class
+com\finio\app\service\EmailService.class
 com\finio\app\dto\UpdateProfileRequest.class
 com\finio\app\entity\User.class
 com\finio\app\entity\Investment.class
@@ -66,6 +69,7 @@ com\finio\app\entity\Transaction$Builder.class
 com\finio\app\entity\Transaction$TransactionType.class
 com\finio\app\controller\InvestmentController.class
 com\finio\app\security\JwtService.class
+com\finio\app\controller\AuthController$ResetPasswordRequest.class
 com\finio\app\dto\TransactionResponse.class
 com\finio\app\dto\RecurringTransactionResponse.class
 com\finio\app\repository\BudgetRepository.class

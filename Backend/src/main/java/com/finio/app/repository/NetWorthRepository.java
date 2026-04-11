@@ -18,4 +18,6 @@ public interface NetWorthRepository extends JpaRepository<NetWorthEntry, Long> {
 
     @Query("SELECT e FROM NetWorthEntry e WHERE e.user.id = :userId AND e.type = 'MONTHLY_SAVINGS' AND e.date BETWEEN :from AND :to")
     Optional<NetWorthEntry> findMonthlySavingsForPeriod(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    void deleteByUserId(Long userId);
 }

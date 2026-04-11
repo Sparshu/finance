@@ -26,6 +26,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type AND t.date BETWEEN :from AND :to")
     BigDecimal sumAmountByUserIdAndTypeAndDateBetween(@Param("userId") Long userId, @Param("type") TransactionType type, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = 'EXPENSE' AND t.category = :category AND t.date BETWEEN :from AND :to")
+    // Case-insensitive category match to avoid "Food" vs "food" mismatches
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = 'EXPENSE' AND LOWER(t.category) = LOWER(:category) AND t.date BETWEEN :from AND :to")
     BigDecimal sumExpenseByUserIdAndCategoryAndDateBetween(@Param("userId") Long userId, @Param("category") String category, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    void deleteByUserId(Long userId);
 }

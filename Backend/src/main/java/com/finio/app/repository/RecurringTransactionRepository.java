@@ -11,4 +11,5 @@ import java.util.List;
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, Long> {
     List<RecurringTransaction> findByUserIdOrderByNextRunDateAsc(Long userId);
     List<RecurringTransaction> findByActiveAndNextRunDateLessThanEqual(boolean active, LocalDate date);
+    void deleteByUserId(Long userId);
 }

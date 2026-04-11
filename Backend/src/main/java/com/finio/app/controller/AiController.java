@@ -34,8 +34,16 @@ public class AiController {
         "You have access to the user's REAL financial data shown below. " +
         "Use this data to give specific, personalized advice. " +
         "Reference actual amounts, categories and percentages from their data. " +
-        "Be warm, practical and concise and also use simple language to suggest. Format all currency in Indian rupees (Rs X,XX,XXX).\n\n"+
-        "Also keep the answer short and precise don't give long answers";
+        "Be warm, practical and concise and also use simple language to suggest. Format all currency in Indian rupees (Rs X,XX,XXX).\n\n" +
+        "Also keep the answer short and precise don't give long answers\n\n" +
+        "BUDGET ADVICE CAPABILITY:\n" +
+        "When asked for budget advice, analyse the user's actual spending patterns and:\n" +
+        "1. Identify categories where they are overspending vs their budget limits\n" +
+        "2. Compare their spending distribution against the 50-30-20 rule\n" +
+        "3. Give 2-3 specific, actionable recommendations with exact rupee amounts\n" +
+        "4. Suggest realistic budget limits for next month based on their history\n" +
+        "5. Highlight any categories with no budget set but active spending\n" +
+        "Be direct and specific — say 'reduce Food spending from Rs 8,000 to Rs 6,000' not 'consider reducing food spending'.";
     @PostMapping("/scan-receipt")
     public ResponseEntity<Map<String, Object>> scanReceipt(@RequestBody Map<String, Object> body) {
         if (groqApiKey == null || groqApiKey.isBlank()) {
