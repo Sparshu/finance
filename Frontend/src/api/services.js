@@ -6,12 +6,22 @@ export const userApi = {
   updateProfile:  (name)          => api.patch('/users/me',          { name }),
   changePassword: (currentPassword, newPassword) =>
                                      api.patch('/users/me/password', { currentPassword, newPassword }),
+  deleteAccount:  ()              => api.delete('/users/me'),
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
-  login:    (email, password)              => api.post('/auth/login',    { email, password }),
-  register: (name, email, password)        => api.post('/auth/register', { name, email, password }),
+  // Step 1: submit credentials → triggers OTP email
+  login:    (email, password) => api.post('/auth/login',    { email, password }),
+  register: (name, email, password) => api.post('/auth/register', { name, email, password }),
+
+  // Step 2: verify OTP → returns JWT (used for both login and register)
+  verifyOtp:  (email, otp)  => api.post('/auth/otp/verify',  { email, otp }),
+  resendOtp:  (email)       => api.post('/auth/otp/resend',  { email }),
+
+  // Forgot / reset password
+  forgotPassword: (email)              => api.post('/auth/forgot-password', { email }),
+  resetPassword:  (token, newPassword) => api.post('/auth/reset-password',  { token, newPassword }),
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -65,6 +75,7 @@ export const billApi = {
   markPaid: (id)         => api.patch(`/bills/${id}/pay`),
   delete:   (id)         => api.delete(`/bills/${id}`),
 }
+
 // ── Recurring Transactions ────────────────────────────────────────────────────
 export const recurringApi = {
   getAll:  ()          => api.get('/recurring'),
@@ -86,6 +97,7 @@ export const netWorthApi = {
     return api.post(`/networth/rollover-savings${q}`)
   },
 }
+
 // ── Receipt Scanner ───────────────────────────────────────────────────────────
 export const receiptApi = {
   scan: (imageBase64) => {
@@ -100,6 +112,25 @@ export const receiptApi = {
     }).then(async res => {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to scan receipt')
+      return data
+    })
+  }
+}
+
+// ── Natural Language Transaction ──────────────────────────────────────────────
+export const nlApi = {
+  parseTransaction: (text) => {
+    const token = localStorage.getItem('finio_token')
+    return fetch('http://localhost:8080/api/ai/parse-transaction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ text }),
+    }).then(async res => {
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to parse transaction')
       return data
     })
   }

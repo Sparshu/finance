@@ -18,6 +18,9 @@ import AIChatbot           from './components/AiChatBot'
 import { useTheme }        from './api/UseTheme'
 import { PAGE_TITLES, now } from './data/sampleData'
 
+// Prevent accidental reloads
+window.onbeforeunload = () => true
+
 const ALL_TITLES = {
   ...PAGE_TITLES,
   profile: 'Profile & Settings',
