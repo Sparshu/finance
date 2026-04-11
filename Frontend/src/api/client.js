@@ -21,11 +21,14 @@ async function request(method, path, body) {
     clearTimeout(timeout)
 
     if (res.status === 401 || res.status === 403) {
-      localStorage.removeItem('finio_token')
-      localStorage.removeItem('finio_user')
-      window.location.reload()
-      throw new Error('Session expired. Please log in again.')
-    }
+  // Only reload if user was previously logged in
+  if (getToken()) {
+    localStorage.removeItem('finio_token')
+    localStorage.removeItem('finio_user')
+    window.location.reload()
+  }
+  throw new Error('Session expired. Please log in again.')
+}
 
     if (!res.ok) {
       let message = res.statusText
