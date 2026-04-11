@@ -8,35 +8,47 @@ async function request(method, path, body) {
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 60000) // 60 second timeout
 
-  if (res.status === 401 || res.status === 403) {
-    localStorage.removeItem('finio_token')
-    localStorage.removeItem('finio_user')
-    window.location.reload()
-    throw new Error('Session expired. Please log in again.')
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('finio_token')
+      localStorage.removeItem('finio_user')
+      window.location.reload()
+      throw new Error('Session expired. Please log in again.')
+    }
+
+    if (!res.ok) {
+      let message = res.statusText
+      try {
+        const err = await res.json()
+        if (err.errors && typeof err.errors === 'object') {
+          message = Object.values(err.errors).join(', ')
+        } else {
+          message = err.message || err.error || message
+        }
+      } catch { /* ignore parse errors */ }
+      throw new Error(message)
+    }
+
+    if (res.status === 204) return null
+    return res.json()
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out. The server may be waking up — please try again.')
+    }
+    throw err
   }
-
-  if (!res.ok) {
-    let message = res.statusText
-    try {
-      const err = await res.json()
-      if (err.errors && typeof err.errors === 'object') {
-        // Spring validation error — join all field messages
-        message = Object.values(err.errors).join(', ')
-      } else {
-        message = err.message || err.error || message
-      }
-    } catch { /* ignore parse errors */ }
-    throw new Error(message)
-  }
-
-  if (res.status === 204) return null
-  return res.json()
 }
 
 export const api = {
