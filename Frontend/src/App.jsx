@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AuthScreen          from './components/AuthScreen'
 import Sidebar             from './components/Sidebar'
+import MobileNav           from './components/MobileNav'
 import AddModal            from './components/AddModal'
 import ReceiptScanner      from './components/ReceiptScanner'
 import DashboardPage       from './pages/DashboardPage'
@@ -170,6 +171,7 @@ export default function App() {
       )}
 
       <AIChatbot />
+      <MobileNav active={page} setActive={setPage} />
     </div>
   )
 }
