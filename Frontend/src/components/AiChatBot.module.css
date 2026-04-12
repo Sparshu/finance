@@ -350,3 +350,23 @@
   cursor: not-allowed;
   transform: none;
 }
+/* ── Mobile: lift FAB and chat window above bottom nav ──────────────────── */
+@media (max-width: 768px) {
+  .fab {
+    bottom: 80px;   /* 64px nav + 16px breathing room */
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .chatWindow {
+    bottom: 140px;  /* above FAB which is at 80px */
+    right: 10px;
+    left: 10px;
+    width: auto;
+    height: 65vh;
+    max-height: calc(100dvh - 160px);
+    border-radius: 20px;
+  }
+}

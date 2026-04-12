@@ -140,7 +140,7 @@ export default function ReportsPage() {
           { label: 'Net Savings',    value: fmt(totals.net),     color: totals.net >= 0 ? 'var(--blue)' : 'var(--red)' },
           { label: 'Savings Rate',   value: `${savingsRate}%`,   color: savingsRate > 20 ? 'var(--accent)' : savingsRate > 0 ? 'var(--amber)' : 'var(--red)' },
         ].map((c, i) => (
-          <div className="card" key={i} style={{ animationDelay: i * 0.06 + 's', borderTop: `2px solid ${c.color}` }}>
+          <div className="card" key={i} style={{ animationDelay: i * 0.06 + 's', borderLeft: `3px solid ${c.color}`, borderRadius: 'var(--radius-lg)', paddingLeft: 20 }}>
             <div className="card-label">{c.label}</div>
             <div className="card-value" style={{ color: c.color, fontSize: 22 }}>{c.value}</div>
           </div>
