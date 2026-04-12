@@ -94,8 +94,9 @@ export default function ReceiptScanner({ onClose, onSaved }) {
       })
       setStep(STEPS.REVIEW)
     } catch (e) {
-      setError(e.message || 'Failed to scan receipt')
-      setStep(STEPS.UPLOAD)
+      console.error('Scan error:', e)
+  setError(e.message || String(e) || 'Failed to scan receipt')
+  setStep(STEPS.UPLOAD)
     }
   }
 
