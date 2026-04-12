@@ -46,8 +46,9 @@ export default function DashboardPage({ onAdd, onRefreshKey }) {
         ...v,
       }))
   })()
-  const maxVal = chartData.length ? Math.max(...chartData.map(d => d.income), 1) : 1
-
+const maxVal = chartData.length
+  ? Math.max(...chartData.map(d => Math.max(d.income, d.expense)), 1)
+  : 1
   return (
     <div className="page-anim">
       {/* KPI cards */}
