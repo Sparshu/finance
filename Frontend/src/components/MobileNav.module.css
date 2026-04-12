@@ -4,21 +4,37 @@
 
 @media (max-width: 768px) {
   .mobileNav {
-    display: flex;
+    display: block;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
     background: var(--bg2);
     border-top: 1px solid var(--border);
     z-index: 100;
-    padding: 0 4px;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  .scrollTrack {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 64px;
+    padding: 0 4px;
+    gap: 2px;
+    /* hide scrollbar but keep scrollable */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollTrack::-webkit-scrollbar {
+    display: none;
+  }
+
   .navBtn {
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -27,7 +43,8 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px 4px;
+    padding: 6px 10px;
+    min-width: 64px;
     border-radius: 10px;
     transition: background 0.15s;
     color: var(--text3);
@@ -39,6 +56,7 @@
 
   .active {
     color: var(--accent) !important;
+    background: var(--bg3);
   }
 
   .icon {
@@ -47,8 +65,9 @@
   }
 
   .label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 500;
     line-height: 1;
+    white-space: nowrap;
   }
 }
