@@ -216,3 +216,17 @@
 .successBox strong {
   color: var(--text);
 }
+@media (max-width: 768px) {
+  .authWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .authHero {
+    display: none;
+  }
+
+  .authPanel {
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+}
