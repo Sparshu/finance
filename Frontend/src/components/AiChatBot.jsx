@@ -26,10 +26,11 @@ function isTransactionIntent(text) {
 
 async function callAiChat(messages, context) {
   const token = localStorage.getItem('finio_token')
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
   let res
   try {
-    res = await fetch('http://localhost:8080/api/ai/chat', {
+    res = await fetch(`${API_URL}/ai/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
