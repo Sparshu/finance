@@ -325,26 +325,75 @@ function RecurringTab() {
   )
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
+// Main Page
 export default function TransactionsPage({ onAdd, onScanReceipt }) {
-  const [mainTab, setMainTab] = useState('transactions') // transactions | recurring
-  const [filter,  setFilter]  = useState('ALL')
-  const [editId,  setEditId]  = useState(null)
-  const [search,  setSearch]  = useState('')
+  const [mainTab,    setMainTab]    = useState('transactions')
+  const [filter,     setFilter]     = useState('ALL')
+  const [editId,     setEditId]     = useState(null)
+  const [search,     setSearch]     = useState('')
+  const [category,   setCategory]   = useState('ALL')
+  const [dateFrom,   setDateFrom]   = useState('')
+  const [dateTo,     setDateTo]     = useState('')
+  const [amtMin,     setAmtMin]     = useState('')
+  const [amtMax,     setAmtMax]     = useState('')
+  const [showFilter, setShowFilter] = useState(false)
+  const [selected,   setSelected]   = useState(new Set())
+  const [bulkMode,   setBulkMode]   = useState(false)
+  const [deleting,   setDeleting]   = useState(false)
   const toast = useToast()
   const { data: txs, loading, refetch } = useApi(txApi.getAll)
 
   const filtered = (txs || []).filter(t => {
-    const matchType   = filter === 'ALL' || t.type === filter
-    const matchSearch = !search || t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.category.toLowerCase().includes(search.toLowerCase())
-    return matchType && matchSearch
+    if (filter !== 'ALL' && t.type !== filter) return false
+    if (category !== 'ALL' && t.category !== category) return false
+    if (search && !t.name.toLowerCase().includes(search.toLowerCase()) &&
+        !t.category.toLowerCase().includes(search.toLowerCase()) &&
+        !(t.note || '').toLowerCase().includes(search.toLowerCase())) return false
+    if (dateFrom && t.date < dateFrom) return false
+    if (dateTo   && t.date > dateTo)   return false
+    if (amtMin   && Number(t.amount) < Number(amtMin)) return false
+    if (amtMax   && Number(t.amount) > Number(amtMax)) return false
+    return true
   })
+
+  const hasActiveFilters = category !== 'ALL' || dateFrom || dateTo || amtMin || amtMax
+
+  const clearFilters = () => {
+    setCategory('ALL'); setDateFrom(''); setDateTo(''); setAmtMin(''); setAmtMax('')
+  }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this transaction?')) return
     try { await txApi.delete(id); toast.success('Transaction deleted'); refetch() }
     catch (e) { toast.error(e.message) }
+  }
+
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set())
+    else setSelected(new Set(filtered.map(t => t.id)))
+  }
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return
+    if (!confirm(`Delete ${selected.size} transaction${selected.size > 1 ? 's' : ''}? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      await Promise.all([...selected].map(id => txApi.delete(id)))
+      toast.success(`${selected.size} transaction${selected.size > 1 ? 's' : ''} deleted`)
+      setSelected(new Set())
+      setBulkMode(false)
+      refetch()
+    } catch (e) { toast.error(e.message) }
+    finally { setDeleting(false) }
   }
 
   const tabStyle = (t) => ({
@@ -356,13 +405,12 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
 
   return (
     <div className="page-anim">
-      {/* Main tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <button style={tabStyle('transactions')} onClick={() => setMainTab('transactions')}>
-          💸 Transactions
+          Transactions
         </button>
         <button style={tabStyle('recurring')} onClick={() => setMainTab('recurring')}>
-          🔄 Recurring
+          Recurring
         </button>
       </div>
 
@@ -374,13 +422,33 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
                 <button key={f}
                   className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`}
                   onClick={() => setFilter(f)}>
-                  {f === 'ALL' ? 'All' : f === 'INCOME' ? '▲ Income' : '▼ Expense'}
+                  {f === 'ALL' ? 'All' : f === 'INCOME' ? 'Income' : 'Expense'}
                 </button>
               ))}
             </div>
-            <input className="form-input" placeholder="Search…"
-              style={{ width: 200, padding: '7px 14px', fontSize: 13 }}
+            <input className="form-input" placeholder="Search name, category, note..."
+              style={{ width: 220, padding: '7px 14px', fontSize: 13 }}
               value={search} onChange={e => setSearch(e.target.value)} />
+            <button onClick={() => setShowFilter(f => !f)}
+              style={{
+                padding: '8px 14px', fontSize: 13, width: 'auto', cursor: 'pointer',
+                background: hasActiveFilters ? 'var(--accent-soft)' : 'var(--bg3)',
+                border: `1px solid ${hasActiveFilters ? 'var(--accent)' : 'var(--border2)'}`,
+                borderRadius: 'var(--radius)', color: hasActiveFilters ? 'var(--accent)' : 'var(--text2)',
+                fontWeight: 500,
+              }}>
+              Filter{hasActiveFilters ? ' *' : ''}
+            </button>
+            <button onClick={() => { setBulkMode(b => !b); setSelected(new Set()) }}
+              style={{
+                padding: '8px 14px', fontSize: 13, width: 'auto', cursor: 'pointer',
+                background: bulkMode ? 'var(--red-soft)' : 'var(--bg3)',
+                border: `1px solid ${bulkMode ? 'var(--red)' : 'var(--border2)'}`,
+                borderRadius: 'var(--radius)', color: bulkMode ? 'var(--red)' : 'var(--text2)',
+                fontWeight: 500,
+              }}>
+              {bulkMode ? 'Cancel' : 'Select'}
+            </button>
             <button className="btn-primary" onClick={onAdd}
               style={{ padding: '8px 18px', fontSize: 13, width: 'auto' }}>
               + Add
@@ -390,11 +458,77 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
                 padding: '8px 14px', fontSize: 13, width: 'auto',
                 background: 'var(--bg3)', border: '1px solid var(--border2)',
                 borderRadius: 'var(--radius)', color: 'var(--text)', cursor: 'pointer',
-                fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6,
+                fontWeight: 500,
               }}>
-              🧾 Scan
+              Scan
             </button>
           </div>
+
+          {showFilter && (
+            <div className="card" style={{ marginBottom: 16, padding: '16px 20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Category</label>
+                  <select className="form-input" style={{ fontSize: 12 }} value={category}
+                    onChange={e => setCategory(e.target.value)}>
+                    <option value="ALL">All Categories</option>
+                    {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Date From</label>
+                  <input className="form-input" type="date" style={{ fontSize: 12 }}
+                    value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Date To</label>
+                  <input className="form-input" type="date" style={{ fontSize: 12 }}
+                    value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Min Amount</label>
+                  <input className="form-input" type="number" placeholder="0" style={{ fontSize: 12 }}
+                    value={amtMin} onChange={e => setAmtMin(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Max Amount</label>
+                  <input className="form-input" type="number" placeholder="no limit" style={{ fontSize: 12 }}
+                    value={amtMax} onChange={e => setAmtMax(e.target.value)} />
+                </div>
+              </div>
+              {hasActiveFilters && (
+                <button onClick={clearFilters}
+                  style={{ marginTop: 12, background: 'none', border: 'none', color: 'var(--red)', fontSize: 12, cursor: 'pointer' }}>
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {bulkMode && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14, padding: '10px 16px',
+              background: 'var(--red-soft)', border: '1px solid var(--red)',
+              borderRadius: 'var(--radius)', marginBottom: 12,
+            }}>
+              <input type="checkbox" style={{ width: 16, height: 16, cursor: 'pointer' }}
+                checked={selected.size === filtered.length && filtered.length > 0}
+                onChange={toggleSelectAll} />
+              <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>
+                {selected.size === 0 ? 'Select transactions to delete' : `${selected.size} selected`}
+              </span>
+              {selected.size > 0 && (
+                <button onClick={handleBulkDelete} disabled={deleting}
+                  style={{
+                    marginLeft: 'auto', padding: '6px 16px', background: 'var(--red)',
+                    color: '#fff', border: 'none', borderRadius: 8, fontSize: 12,
+                    fontWeight: 600, cursor: 'pointer',
+                  }}>
+                  {deleting ? 'Deleting...' : `Delete ${selected.size}`}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="card">
             {loading && <RowSkeleton count={6} />}
@@ -402,7 +536,7 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
               <div style={{ padding: 48, textAlign: 'center', color: 'var(--text2)' }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>💸</div>
                 <div style={{ fontSize: 13 }}>
-                  {search ? 'No transactions match your search' : 'No transactions found'}
+                  {search || hasActiveFilters ? 'No transactions match your filters' : 'No transactions found'}
                 </div>
               </div>
             )}
@@ -411,8 +545,17 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
                 {editId === t.id ? (
                   <EditRow tx={t} onSave={() => { setEditId(null); refetch() }} onCancel={() => setEditId(null)} />
                 ) : (
-                  <div className={styles.txRow} style={{ animationDelay: i * 0.03 + 's' }}>
-                    <div className={styles.txIcon} style={{ background: t.type === 'INCOME' ? 'var(--accent-soft)' : 'var(--amber-bg)' }}>
+                  <div className={styles.txRow} style={{
+                    animationDelay: i * 0.03 + 's',
+                    background: selected.has(t.id) ? 'var(--red-soft)' : 'transparent',
+                  }}>
+                    {bulkMode && (
+                      <input type="checkbox" style={{ width: 16, height: 16, cursor: 'pointer', flexShrink: 0, marginRight: 4 }}
+                        checked={selected.has(t.id)}
+                        onChange={() => toggleSelect(t.id)} />
+                    )}
+                    <div className={styles.txIcon}
+                      style={{ background: t.type === 'INCOME' ? 'var(--accent-soft)' : 'var(--amber-bg)' }}>
                       {TX_ICONS[t.category] || '💸'}
                     </div>
                     <div className={styles.txInfo}>
@@ -423,16 +566,24 @@ export default function TransactionsPage({ onAdd, onScanReceipt }) {
                       <div className={styles.txAmount} style={{ color: t.type === 'INCOME' ? 'var(--accent)' : 'var(--red)' }}>
                         {t.type === 'INCOME' ? '+' : '-'}{fmt(t.amount)}
                       </div>
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                        <button className={styles.actionBtn} onClick={() => setEditId(t.id)}>✎</button>
-                        <button className={styles.actionBtn} onClick={() => handleDelete(t.id)} style={{ color: 'var(--red)' }}>✕</button>
-                      </div>
+                      {!bulkMode && (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                          <button className={styles.actionBtn} onClick={() => setEditId(t.id)}>Edit</button>
+                          <button className={styles.actionBtn} onClick={() => handleDelete(t.id)} style={{ color: 'var(--red)' }}>Del</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             ))}
           </div>
+
+          {!loading && txs && filtered.length !== txs.length && (
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 10 }}>
+              Showing {filtered.length} of {txs.length} transactions
+            </div>
+          )}
         </>
       )}
 

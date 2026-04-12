@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { txApi, budgetApi, goalApi, investApi, recurringApi } from '../api/services'
+import { nlApi } from '../api/services'
 import styles from './AiChatBot.module.css'
 
 const SUGGESTIONS = [
@@ -7,7 +8,21 @@ const SUGGESTIONS = [
   'Am I on track with my budgets?',
   'How are my savings goals progressing?',
   'Give me a full 50-30-20 breakdown',
+  'Give me budget advice based on my spending',
+  'Add transaction: I spent ₹500 on food today',
 ]
+
+// Detect if message looks like a natural language transaction entry
+function isTransactionIntent(text) {
+  const lower = text.toLowerCase()
+  return (
+    lower.includes('spent') || lower.includes('paid') || lower.includes('bought') ||
+    lower.includes('received') || lower.includes('earned') || lower.includes('got paid') ||
+    lower.includes('add transaction') || lower.includes('log transaction') ||
+    lower.includes('record transaction') || lower.includes('add expense') ||
+    lower.includes('add income') || /i (spent|paid|bought|got|received|earned)/i.test(text)
+  )
+}
 
 async function callAiChat(messages, context) {
   const token = localStorage.getItem('finio_token')
@@ -94,16 +109,41 @@ export default function AIChatbot() {
     if (!userMsg || loading) return
     setInput('')
 
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }])
+    setLoading(true)
+
+    // ── Natural language transaction detection ────────────────────────────────
+    if (isTransactionIntent(userMsg)) {
+      try {
+        const result = await nlApi.parseTransaction(userMsg)
+        const p = result.parsed
+        const typeLabel = p.type === 'INCOME' ? 'income' : 'expense'
+        const reply =
+          `Done! I've added this transaction:\n\n` +
+          `**${p.name}**\n` +
+          `Amount: ₹${Number(p.amount).toLocaleString('en-IN')}\n` +
+          `Type: ${p.type}\n` +
+          `Category: ${p.category}\n` +
+          `Date: ${p.date}` +
+          (p.note ? `\nNote: ${p.note}` : '') +
+          `\n\nYou can see it in your Transactions page. Let me know if anything looks wrong!`
+        setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : 'Something went wrong.'
+        setMessages(prev => [...prev, { role: 'assistant', content: `I tried to add that transaction but ran into an issue: ${errMsg}\n\nTry rephrasing, e.g. "I spent ₹500 on food today"` }])
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // ── Regular AI chat ───────────────────────────────────────────────────────
     const apiHistory = [
       ...messages.slice(1).map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: userMsg },
     ]
 
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }])
-    setLoading(true)
-
     try {
-      // Refetch context on each message to always have fresh data
       const freshContext = await fetchUserContext()
       setContext(freshContext)
 

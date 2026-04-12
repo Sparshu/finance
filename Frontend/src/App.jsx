@@ -15,15 +15,22 @@ import ProfilePage         from './pages/ProfilePage'
 import NetWorthPage        from './pages/NetWorthPage'
 import NotificationsPanel  from './components/NotificationsPanel'
 import AIChatbot           from './components/AiChatBot'
+import ResetPasswordPage   from './pages/ResetPasswordPage'
+import HelpLink            from './components/HelpLink'
 import { useTheme }        from './api/UseTheme'
 import { PAGE_TITLES, now } from './data/sampleData'
-
-// Prevent accidental reloads
-window.onbeforeunload = () => true
 
 const ALL_TITLES = {
   ...PAGE_TITLES,
   profile: 'Profile & Settings',
+}
+
+// ── Detect password-reset deep-link ──────────────────────────────────────────
+function getResetToken() {
+  if (window.location.pathname === '/reset-password') {
+    return new URLSearchParams(window.location.search).get('token') || null
+  }
+  return null
 }
 
 export default function App() {
@@ -56,12 +63,26 @@ export default function App() {
     setUser({ name: '', email: '' })
   }
 
-  // Called after a transaction is saved to refresh dashboard data
   const onTransactionSaved = () => setRefreshKey(k => k + 1)
 
   const onProfileUpdated = (updated) => {
     setUser(updated)
     localStorage.setItem('finio_user', JSON.stringify(updated))
+  }
+
+  // ── Handle /reset-password?token=... deep link ───────────────────────────
+  const resetToken = getResetToken()
+  if (resetToken) {
+    return (
+      <ResetPasswordPage
+        token={resetToken}
+        onDone={() => {
+          // Clear the token from the URL and show the login screen
+          window.history.replaceState({}, '', '/')
+          setAuthed(false)
+        }}
+      />
+    )
   }
 
   if (!authed) return <AuthScreen onLogin={login} />
@@ -129,6 +150,9 @@ export default function App() {
         <div className="page-body" key={page}>
           {PAGES[page]}
         </div>
+
+        {/* Footer – Help Centre */}
+        <HelpLink variant="footer" />
       </main>
 
       {modal && (

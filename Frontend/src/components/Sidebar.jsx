@@ -1,5 +1,6 @@
 import { NAV } from '../data/sampleData'
 import styles from './Sidebar.module.css'
+import HelpLink from './HelpLink'
 
 const EXTRA_NAV = [{ id: 'profile', label: 'Profile', icon: '◉' }]
 
@@ -42,6 +43,9 @@ export default function Sidebar({ active, setActive, user, avatar, onLogout, dar
           {n.label}
         </div>
       ))}
+
+      {/* Help Centre */}
+      <HelpLink variant="sidebar" />
 
       {/* Theme toggle */}
       <div style={{ padding: '8px 10px' }}>

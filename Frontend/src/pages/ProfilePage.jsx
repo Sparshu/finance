@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { userApi } from '../api/services'
 import { useToast } from '../components/Toast'
 import styles from './ProfilePage.module.css'
+import HelpLink from '../components/HelpLink'
 
 function CameraIcon() {
   return (
@@ -56,6 +57,8 @@ export default function ProfilePage({ user, avatar, onAvatarChange, onProfileUpd
   const [pwSaving,  setPwSaving]  = useState(false)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [dragOver,      setDragOver]      = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const initials = (user.name || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -121,6 +124,19 @@ export default function ProfilePage({ user, avatar, onAvatarChange, onProfileUpd
       toast.error(e.message || 'Failed to change password')
     } finally {
       setPwSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'delete') return toast.error('Please type "delete" to confirm')
+    setDeleteLoading(true)
+    try {
+      await userApi.deleteAccount()
+      localStorage.clear()
+      onLogout()
+    } catch (e) {
+      toast.error(e.message || 'Failed to delete account')
+      setDeleteLoading(false)
     }
   }
 
@@ -267,6 +283,49 @@ export default function ProfilePage({ user, avatar, onAvatarChange, onProfileUpd
             <span style={{ fontSize: 13, fontFamily: 'var(--mono)' }}>{p.value}</span>
           </div>
         ))}
+      </div>
+
+      {/* Help Centre */}
+      <HelpLink variant="profile" />
+
+      {/* Delete Account */}
+      <div className="card" style={{ marginBottom: 16, borderTop: '2px solid var(--red)' }}>
+        <div className="section-title" style={{ marginBottom: 6, color: 'var(--red)' }}>Delete Account</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16, lineHeight: 1.5 }}>
+          This action is <strong>permanent and irreversible</strong>. All your data — transactions, budgets, investments, goals, and bills — will be deleted immediately.
+        </div>
+        <div className="form-group" style={{ marginBottom: 12 }}>
+          <label className="form-label" style={{ color: 'var(--red)' }}>
+            Type <code style={{ background: 'var(--red-soft)', padding: '1px 6px', borderRadius: 4, fontFamily: 'var(--mono)' }}>delete</code> to confirm
+          </label>
+          <input
+            className="form-input"
+            value={deleteConfirm}
+            onChange={e => setDeleteConfirm(e.target.value)}
+            placeholder="delete"
+            style={{ borderColor: deleteConfirm === 'delete' ? 'var(--red)' : undefined }}
+            onKeyDown={e => e.key === 'Enter' && handleDeleteAccount()}
+          />
+        </div>
+        <button
+          onClick={handleDeleteAccount}
+          disabled={deleteLoading || deleteConfirm !== 'delete'}
+          style={{
+            background: deleteConfirm === 'delete' ? 'var(--red)' : 'var(--red-soft)',
+            border: '1px solid var(--red)',
+            color: deleteConfirm === 'delete' ? '#fff' : 'var(--red)',
+            borderRadius: 10,
+            padding: '10px 24px',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: deleteConfirm === 'delete' ? 'pointer' : 'not-allowed',
+            fontFamily: 'var(--sans)',
+            opacity: deleteLoading ? 0.6 : 1,
+            transition: 'background 0.2s, color 0.2s',
+          }}
+        >
+          {deleteLoading ? 'Deleting…' : 'Delete My Account'}
+        </button>
       </div>
 
       {/* Sign out */}

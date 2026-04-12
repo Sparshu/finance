@@ -2,17 +2,28 @@ import { useState, useEffect, useRef } from 'react'
 import { billApi, budgetApi, goalApi } from '../api/services'
 import { fmt } from '../data/sampleData'
 
+const DISMISSED_KEY = 'finio_dismissed_notifications'
+
+function loadDismissed() {
+  try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY)) || []) }
+  catch { return new Set() }
+}
+
+function saveDismissed(set) {
+  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]))
+}
+
 export default function NotificationsPanel({ onNavigate }) {
   const [open,      setOpen]      = useState(false)
   const [bills,     setBills]     = useState([])
   const [budgets,   setBudgets]   = useState([])
   const [goals,     setGoals]     = useState([])
   const [loading,   setLoading]   = useState(false)
+  const [dismissed, setDismissed] = useState(loadDismissed)
+  const [paying,    setPaying]    = useState(null)
   const ref = useRef(null)
 
-  // Fetch fresh data every time the panel opens
-  useEffect(() => {
-    if (!open) return
+  const fetchData = () => {
     setLoading(true)
     Promise.all([
       billApi.getAll().catch(() => []),
@@ -23,9 +34,13 @@ export default function NotificationsPanel({ onNavigate }) {
       setBudgets(bu || [])
       setGoals(g   || [])
     }).finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    if (!open) return
+    fetchData()
   }, [open])
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
@@ -34,96 +49,104 @@ export default function NotificationsPanel({ onNavigate }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // ── Build notifications from real data ─────────────────────────────────────
-  const notifications = []
+  const dismiss = (e, id) => {
+    e.stopPropagation()
+    const next = new Set(dismissed)
+    next.add(id)
+    setDismissed(next)
+    saveDismissed(next)
+  }
 
+  const handleMarkPaid = async (e, billId, notifId) => {
+    e.stopPropagation()
+    setPaying(billId)
+    try {
+      await billApi.markPaid(billId)
+      const next = new Set(dismissed)
+      next.add(notifId)
+      setDismissed(next)
+      saveDismissed(next)
+      fetchData()
+    } catch (err) {
+      console.error('Failed to mark bill paid:', err)
+    } finally {
+      setPaying(null)
+    }
+  }
+
+  const allNotifications = []
   const today = new Date().getDate()
 
-  // Bills marked DUE
   bills.filter(b => b.status === 'DUE').forEach(b => {
-    notifications.push({
-      id:     `bill-due-${b.id}`,
-      type:   'error',
-      icon:   '⏰',
-      title:  `${b.name} is due now!`,
-      body:   `${fmt(b.amount)} — mark it as paid`,
-      action: 'bills',
+    allNotifications.push({
+      id: `bill-due-${b.id}`, type: 'error', icon: '⏰',
+      title: `${b.name} is due now!`,
+      body: `${fmt(b.amount)} — mark it as paid`,
+      action: 'bills', billId: b.id,
     })
   })
 
-  // Upcoming bills due within 5 days
   bills.filter(b => b.status === 'UPCOMING' && b.dueDay >= today && b.dueDay <= today + 5).forEach(b => {
     const daysLeft = b.dueDay - today
-    notifications.push({
-      id:     `bill-soon-${b.id}`,
-      type:   'warning',
-      icon:   '📅',
-      title:  `${b.name} due in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`,
-      body:   `${fmt(b.amount)} on day ${b.dueDay}`,
-      action: 'bills',
+    allNotifications.push({
+      id: `bill-soon-${b.id}`,
+      type: daysLeft === 0 ? 'error' : 'warning',
+      icon: daysLeft === 0 ? '⏰' : '📅',
+      title: daysLeft === 0 ? `${b.name} is due TODAY!` : `${b.name} due in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`,
+      body: `${fmt(b.amount)} on day ${b.dueDay}`,
+      action: 'bills', billId: b.id,
     })
   })
 
-  // Over-budget — spent > limit
   budgets.forEach(b => {
     const spent = Number(b.spent) || 0
     const limit = Number(b.limit) || 0
     if (limit > 0 && spent > limit) {
-      notifications.push({
-        id:     `budget-over-${b.id}`,
-        type:   'error',
-        icon:   '⚠️',
-        title:  `${b.category} budget exceeded`,
-        body:   `Spent ${fmt(spent)} of ${fmt(limit)} — over by ${fmt(spent - limit)}`,
+      allNotifications.push({
+        id: `budget-over-${b.id}`, type: 'error', icon: '⚠️',
+        title: `${b.category} budget exceeded`,
+        body: `Spent ${fmt(spent)} of ${fmt(limit)} — over by ${fmt(spent - limit)}`,
         action: 'budgets',
       })
     }
   })
 
-  // Near-budget — 85–100% used
   budgets.forEach(b => {
     const spent = Number(b.spent) || 0
     const limit = Number(b.limit) || 0
     if (limit > 0) {
       const pct = spent / limit
       if (pct >= 0.85 && pct < 1.0) {
-        notifications.push({
-          id:     `budget-warn-${b.id}`,
-          type:   'warning',
-          icon:   '📊',
-          title:  `${b.category} at ${Math.round(pct * 100)}% of budget`,
-          body:   `${fmt(limit - spent)} remaining this month`,
+        allNotifications.push({
+          id: `budget-warn-${b.id}`, type: 'warning', icon: '📊',
+          title: `${b.category} at ${Math.round(pct * 100)}% of budget`,
+          body: `${fmt(limit - spent)} remaining this month`,
           action: 'budgets',
         })
       }
     }
   })
 
-  // Goals reached
   goals.filter(g => Number(g.progressPercent) >= 100).forEach(g => {
-    notifications.push({
-      id:     `goal-done-${g.id}`,
-      type:   'success',
-      icon:   '🎉',
-      title:  `Goal reached: ${g.name}`,
-      body:   `You saved ${fmt(g.targetAmount)}!`,
+    allNotifications.push({
+      id: `goal-done-${g.id}`, type: 'success', icon: '🎉',
+      title: `Goal reached: ${g.name}`,
+      body: `You saved ${fmt(g.targetAmount)}!`,
       action: 'goals',
     })
   })
 
-  // Goals almost there (90–99%)
   goals.filter(g => Number(g.progressPercent) >= 90 && Number(g.progressPercent) < 100).forEach(g => {
     const remaining = Number(g.targetAmount) - Number(g.savedAmount)
-    notifications.push({
-      id:     `goal-near-${g.id}`,
-      type:   'info',
-      icon:   '🎯',
-      title:  `Almost there: ${g.name}`,
-      body:   `${g.progressPercent}% complete — just ${fmt(remaining)} to go!`,
+    allNotifications.push({
+      id: `goal-near-${g.id}`, type: 'info', icon: '🎯',
+      title: `Almost there: ${g.name}`,
+      body: `${g.progressPercent}% complete — just ${fmt(remaining)} to go!`,
       action: 'goals',
     })
   })
 
+  const notifications = allNotifications.filter(n => !dismissed.has(n.id))
   const unread = notifications.length
 
   const typeStyle = {
@@ -154,8 +177,7 @@ export default function NotificationsPanel({ onNavigate }) {
           <div style={{
             position: 'absolute', top: 5, right: 5,
             width: 7, height: 7, borderRadius: '50%',
-            background: 'var(--red)',
-            border: '1.5px solid var(--bg2)',
+            background: 'var(--red)', border: '1.5px solid var(--bg2)',
             animation: 'pulse-dot 2s infinite',
           }} />
         )}
@@ -165,12 +187,9 @@ export default function NotificationsPanel({ onNavigate }) {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          width: 348,
-          background: 'var(--card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          zIndex: 1000, overflow: 'hidden',
+          width: 360, background: 'var(--card)',
+          border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-lg)', zIndex: 1000, overflow: 'hidden',
           animation: 'fadeUp 0.18s ease both',
         }}>
 
@@ -180,19 +199,33 @@ export default function NotificationsPanel({ onNavigate }) {
             padding: '14px 18px', borderBottom: '1px solid var(--border)',
           }}>
             <div style={{ fontWeight: 600, fontSize: 14 }}>Notifications</div>
-            {unread > 0
-              ? <span style={{ background: 'var(--red-soft)', color: 'var(--red)', borderRadius: 100, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>
-                  {unread} alert{unread > 1 ? 's' : ''}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {unread > 0
+                ? <span style={{ background: 'var(--red-soft)', color: 'var(--red)', borderRadius: 100, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>
+                    {unread} alert{unread > 1 ? 's' : ''}
+                  </span>
+                : <span style={{ color: 'var(--text3)', fontSize: 12 }}>Up to date</span>
+              }
+              {unread > 0 && !loading && (
+                <span
+                  onClick={() => {
+                    const next = new Set([...dismissed, ...notifications.map(n => n.id)])
+                    setDismissed(next)
+                    saveDismissed(next)
+                  }}
+                  style={{ fontSize: 11, color: 'var(--text3)', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Clear all
                 </span>
-              : <span style={{ color: 'var(--text3)', fontSize: 12 }}>Up to date</span>
-            }
+              )}
+            </div>
           </div>
 
           {/* Body */}
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+          <div style={{ maxHeight: 420, overflowY: 'auto' }}>
             {loading ? (
               <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text2)', fontSize: 13 }}>
-                Loading…
+                Loading...
               </div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text2)' }}>
@@ -203,45 +236,84 @@ export default function NotificationsPanel({ onNavigate }) {
             ) : (
               notifications.map((n, i) => {
                 const s = typeStyle[n.type] || typeStyle.info
+                const isBill = !!n.billId
+                const isPayingThis = paying === n.billId
                 return (
                   <div
                     key={n.id}
-                    onClick={() => { onNavigate(n.action); setOpen(false) }}
                     style={{
-                      display: 'flex', gap: 12, padding: '13px 18px', cursor: 'pointer',
+                      display: 'flex', gap: 12, padding: '13px 18px',
                       borderBottom: i < notifications.length - 1 ? '1px solid var(--border)' : 'none',
                       alignItems: 'flex-start', transition: 'background 0.1s',
                     }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                      background: s.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 17,
-                    }}>
+                    {/* Icon */}
+                    <div
+                      onClick={() => { onNavigate(n.action); setOpen(false) }}
+                      style={{
+                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                        background: s.bg, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 17, cursor: 'pointer',
+                      }}
+                    >
                       {n.icon}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+
+                    {/* Text + Mark Paid button */}
+                    <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                      onClick={() => { onNavigate(n.action); setOpen(false) }}>
                       <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>
                         {n.title}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.45 }}>
                         {n.body}
                       </div>
+                      {isBill && (
+                        <button
+                          onClick={(e) => handleMarkPaid(e, n.billId, n.id)}
+                          disabled={isPayingThis}
+                          style={{
+                            marginTop: 7, padding: '4px 12px', fontSize: 11, fontWeight: 600,
+                            background: isPayingThis ? 'var(--bg3)' : 'var(--accent)',
+                            color: isPayingThis ? 'var(--text2)' : '#0f0f1a',
+                            border: 'none', borderRadius: 6,
+                            cursor: isPayingThis ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {isPayingThis ? 'Marking...' : '✓ Mark as Paid'}
+                        </button>
+                      )}
                     </div>
-                    <div style={{
-                      width: 7, height: 7, borderRadius: '50%',
-                      background: s.dot, flexShrink: 0, marginTop: 6,
-                    }} />
+
+                    {/* Dismiss X */}
+                    <button
+                      onClick={(e) => dismiss(e, n.id)}
+                      title="Dismiss"
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--text3)', fontSize: 16, lineHeight: 1,
+                        padding: '2px 4px', borderRadius: 4, flexShrink: 0,
+                        transition: 'color 0.15s, background 0.15s',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.color = 'var(--red)'
+                        e.currentTarget.style.background = 'var(--red-soft)'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.color = 'var(--text3)'
+                        e.currentTarget.style.background = 'none'
+                      }}
+                    >
+                      ✕
+                    </button>
                   </div>
                 )
               })
             )}
           </div>
 
-          {/* Footer */}
           {notifications.length > 0 && !loading && (
             <div style={{
               padding: '10px 18px', borderTop: '1px solid var(--border)',
