@@ -6,6 +6,9 @@ import com.finio.app.dto.RegisterRequest;
 import com.finio.app.entity.User;
 import com.finio.app.repository.UserRepository;
 import com.finio.app.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,10 +16,13 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository        userRepository;
     private final PasswordEncoder       passwordEncoder;
@@ -36,15 +42,12 @@ public class AuthService {
         this.emailService          = emailService;
     }
 
-    // ── Register ─────────────────────────────────────────────────────────────
-    // Step 1: Save user with verified=false, then send OTP.
-    // If the email already exists but is unverified, allow re-registration
-    // (resend OTP) so users who got stuck can try again.
+    // ── Register ──────────────────────────────────────────────────────────────
 
     public void register(RegisterRequest request) {
         userRepository.findByEmail(request.email()).ifPresent(existing -> {
             if (existing.isVerified()) {
-                throw new RuntimeException("Email already registered: " + request.email());
+                throw new RuntimeException("This email is already registered. Please log in instead.");
             }
             // Unverified account exists — delete it so they can re-register cleanly
             userRepository.delete(existing);
@@ -55,26 +58,34 @@ public class AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .build();
-        // verified defaults to false
         userRepository.save(user);
 
-        sendOtpToUser(user);
+        // If OTP email fails, delete the user so they are not stuck
+        try {
+            sendOtpToUser(user);
+        } catch (Exception e) {
+            log.error("OTP email failed for {}, deleting unverified user: {}", request.email(), e.getMessage());
+            userRepository.delete(user);
+            throw new RuntimeException("Failed to send OTP email. Please try again.");
+        }
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
-    // Step 1: Verify credentials, check account is verified, then send OTP.
 
     public void login(LoginRequest request) {
-        // Throws BadCredentialsException if email/password wrong
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Block unverified accounts from logging in
         if (!user.isVerified()) {
-            throw new RuntimeException("Please verify your email before signing in. Check your inbox for the OTP.");
+            try {
+                sendOtpToUser(user);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to send OTP. Please try again.");
+            }
+            throw new RuntimeException("Your email is not verified yet. A new OTP has been sent — please check your inbox.");
         }
 
         sendOtpToUser(user);
@@ -91,7 +102,6 @@ public class AuthService {
     }
 
     // ── OTP Verify ────────────────────────────────────────────────────────────
-    // Step 2 (for both login and register): verify OTP → mark verified → return JWT.
 
     public AuthResponse verifyOtp(String email, String otp) {
         User user = userRepository.findByEmail(email)
@@ -107,10 +117,7 @@ public class AuthService {
             throw new RuntimeException("Invalid OTP. Please try again.");
         }
 
-        // Mark account as verified (matters for new registrations)
         user.setVerified(true);
-
-        // Clear OTP so it can't be reused
         user.setLoginOtp(null);
         user.setLoginOtpExpiry(null);
         userRepository.save(user);
@@ -128,6 +135,19 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("No account found with that email."));
         sendOtpToUser(user);
+    }
+
+    // ── Cleanup unverified accounts every hour ────────────────────────────────
+    // Deletes unverified accounts older than 30 minutes to keep the DB clean.
+
+    @Scheduled(fixedRate = 3600000)
+    public void cleanupUnverifiedAccounts() {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
+        List<User> stale = userRepository.findUnverifiedBefore(cutoff);
+        if (!stale.isEmpty()) {
+            userRepository.deleteAll(stale);
+            log.info("Cleaned up {} unverified accounts older than 30 minutes", stale.size());
+        }
     }
 
     // ── Forgot / Reset Password ──────────────────────────────────────────────
