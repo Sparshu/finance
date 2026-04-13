@@ -42,7 +42,7 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("Email already registered: " + request.email());
+            throw new RuntimeException("This email is already registered. Please log in instead.");
         }
         User user = User.builder()
                 .name(request.name())
@@ -51,8 +51,13 @@ public class AuthService {
                 .build();
         userRepository.save(user);
 
-        // Send OTP for email verification
-        sendOtpToUser(user);
+        // Send OTP — if it fails, delete the user so they can try again
+        try {
+            sendOtpToUser(user);
+        } catch (Exception e) {
+            userRepository.delete(user);
+            throw new RuntimeException("Failed to send OTP email. Please try again.");
+        }
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────

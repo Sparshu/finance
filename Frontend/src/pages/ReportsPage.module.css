@@ -82,3 +82,21 @@
 }
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: var(--bg4); }
+
+/* Mobile fixes */
+@media (max-width: 768px) {
+  .donutWrap {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .chartBars {
+    gap: 4px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+}
