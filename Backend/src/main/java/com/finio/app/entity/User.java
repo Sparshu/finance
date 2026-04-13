@@ -28,6 +28,12 @@ public class User implements UserDetails {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // ── Email Verification ─────────────────────────────────────────────────────
+    // false until the user completes OTP verification after registration.
+    // Existing rows in DB will default to false — run the SQL below to fix them.
+    @Column(nullable = false)
+    private boolean verified = false;
+
     // ── OTP Login ──────────────────────────────────────────────────────────────
     @Column(name = "login_otp")
     private String loginOtp;
@@ -67,6 +73,9 @@ public class User implements UserDetails {
     public void setPassword(String password)   { this.password = password; }
     public LocalDateTime getCreatedAt()        { return createdAt; }
     public void setCreatedAt(LocalDateTime t)  { this.createdAt = t; }
+
+    public boolean isVerified()                { return verified; }
+    public void setVerified(boolean verified)  { this.verified = verified; }
 
     public String getLoginOtp()                           { return loginOtp; }
     public void setLoginOtp(String loginOtp)              { this.loginOtp = loginOtp; }

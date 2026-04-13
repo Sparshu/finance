@@ -65,7 +65,14 @@ export default function AuthScreen({ onLogin }) {
         setMode('forgot-sent')
       }
     } catch (e) {
-      setError(e.message || 'Something went wrong')
+      const msg = e.message || 'Something went wrong. Please try again.'
+      // Unverified account tried to log in — backend resends OTP, take them to verify screen
+      if (msg.toLowerCase().includes('verify your email')) {
+        setMode('otp')
+        setInfo('Your account isn\'t verified yet. A new code has been sent to ' + email)
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }

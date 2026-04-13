@@ -11,6 +11,7 @@ const ERROR_MAP = {
   'bad credentials':                  'Incorrect email or password. Please try again.',
   'email already registered':         'An account with this email already exists. Try signing in instead.',
   'unauthorized':                     'Your session has expired. Please sign in again.',
+  'please verify your email':       'Please verify your email before signing in. Check your inbox for the OTP.',
   'no otp was requested':             'No verification code was sent. Please start the sign-in process again.',
   'invalid otp':                      'That code doesn\'t match. Please check your email and try again.',
   'otp has expired':                  'The verification code has expired. Please request a new one.',

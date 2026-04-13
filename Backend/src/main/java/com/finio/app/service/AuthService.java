@@ -37,42 +37,46 @@ public class AuthService {
     }
 
     // ── Register ─────────────────────────────────────────────────────────────
-    // Step 1: Save the user, then send OTP for email verification.
-    // Does NOT return a JWT yet — user must verify OTP first.
+    // Step 1: Save user with verified=false, then send OTP.
+    // If the email already exists but is unverified, allow re-registration
+    // (resend OTP) so users who got stuck can try again.
 
     public void register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("This email is already registered. Please log in instead.");
-        }
+        userRepository.findByEmail(request.email()).ifPresent(existing -> {
+            if (existing.isVerified()) {
+                throw new RuntimeException("Email already registered: " + request.email());
+            }
+            // Unverified account exists — delete it so they can re-register cleanly
+            userRepository.delete(existing);
+        });
+
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .build();
+        // verified defaults to false
         userRepository.save(user);
 
-        // Send OTP — if it fails, delete the user so they can try again
-        try {
-            sendOtpToUser(user);
-        } catch (Exception e) {
-            userRepository.delete(user);
-            throw new RuntimeException("Failed to send OTP email. Please try again.");
-        }
+        sendOtpToUser(user);
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
-    // Step 1: Verify email + password. If correct, send OTP.
-    // Does NOT return a JWT yet — user must verify OTP first.
+    // Step 1: Verify credentials, check account is verified, then send OTP.
 
     public void login(LoginRequest request) {
-        // This throws if credentials are wrong
+        // Throws BadCredentialsException if email/password wrong
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Credentials are correct — now send OTP
+        // Block unverified accounts from logging in
+        if (!user.isVerified()) {
+            throw new RuntimeException("Please verify your email before signing in. Check your inbox for the OTP.");
+        }
+
         sendOtpToUser(user);
     }
 
@@ -87,7 +91,7 @@ public class AuthService {
     }
 
     // ── OTP Verify ────────────────────────────────────────────────────────────
-    // Step 2 (for both login and register): verify OTP → return JWT.
+    // Step 2 (for both login and register): verify OTP → mark verified → return JWT.
 
     public AuthResponse verifyOtp(String email, String otp) {
         User user = userRepository.findByEmail(email)
@@ -102,6 +106,9 @@ public class AuthService {
         if (!passwordEncoder.matches(otp, user.getLoginOtp())) {
             throw new RuntimeException("Invalid OTP. Please try again.");
         }
+
+        // Mark account as verified (matters for new registrations)
+        user.setVerified(true);
 
         // Clear OTP so it can't be reused
         user.setLoginOtp(null);
